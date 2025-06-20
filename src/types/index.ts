@@ -1,4 +1,3 @@
-
 export interface Member {
   id: string;
   uniqueId: string;
@@ -6,8 +5,7 @@ export interface Member {
   lastName: string;
   email: string;
   phone: string;
-  department: string;
-  position: string;
+  experience: string;
   dateOfBirth: string;
   address: string;
   profileImage?: string;

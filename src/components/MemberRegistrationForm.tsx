@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { toast } from '@/hooks/use-toast';
 
 interface MemberRegistrationFormProps {
@@ -25,15 +26,111 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
     lastName: member?.lastName || '',
     email: member?.email || '',
     phone: member?.phone || '',
-    department: member?.department || '',
-    position: member?.position || '',
+    experience: member?.experience || '',
     dateOfBirth: member?.dateOfBirth || '',
     address: member?.address || '',
     status: member?.status || 'active'
   });
 
+  const [emailOtp, setEmailOtp] = useState('');
+  const [phoneOtp, setPhoneOtp] = useState('');
+  const [emailVerified, setEmailVerified] = useState(!!member);
+  const [phoneVerified, setPhoneVerified] = useState(!!member);
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+
+  const sendEmailOtp = () => {
+    if (!formData.email) {
+      toast({
+        title: "Error",
+        description: "Please enter your email first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Simulate sending OTP
+    console.log('Sending email OTP to:', formData.email);
+    setEmailOtpSent(true);
+    toast({
+      title: "OTP Sent",
+      description: "Please check your email for the verification code.",
+    });
+  };
+
+  const sendPhoneOtp = () => {
+    if (!formData.phone) {
+      toast({
+        title: "Error",
+        description: "Please enter your phone number first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Simulate sending OTP
+    console.log('Sending phone OTP to:', formData.phone);
+    setPhoneOtpSent(true);
+    toast({
+      title: "OTP Sent",
+      description: "Please check your phone for the verification code.",
+    });
+  };
+
+  const verifyEmailOtp = () => {
+    // Simulate OTP verification (in real app, this would call an API)
+    if (emailOtp === '123456') {
+      setEmailVerified(true);
+      toast({
+        title: "Email Verified",
+        description: "Your email has been successfully verified.",
+      });
+    } else {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the correct OTP.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const verifyPhoneOtp = () => {
+    // Simulate OTP verification (in real app, this would call an API)
+    if (phoneOtp === '123456') {
+      setPhoneVerified(true);
+      toast({
+        title: "Phone Verified",
+        description: "Your phone number has been successfully verified.",
+      });
+    } else {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the correct OTP.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!emailVerified) {
+      toast({
+        title: "Email Not Verified",
+        description: "Please verify your email before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!phoneVerified) {
+      toast({
+        title: "Phone Not Verified",
+        description: "Please verify your phone number before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     const newMember: Member = {
       id: member?.id || Date.now().toString(),
@@ -83,53 +180,123 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
             </div>
           </div>
 
+          {/* Email Verification */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              required
-            />
+            <div className="flex gap-2">
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                required
+                disabled={emailVerified}
+                className={emailVerified ? 'bg-green-50 border-green-300' : ''}
+              />
+              {!emailVerified && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={sendEmailOtp}
+                  disabled={emailOtpSent}
+                >
+                  {emailOtpSent ? 'OTP Sent' : 'Send OTP'}
+                </Button>
+              )}
+            </div>
+            
+            {emailOtpSent && !emailVerified && (
+              <div className="space-y-2">
+                <Label>Enter Email OTP (Demo: use 123456)</Label>
+                <div className="flex gap-2 items-center">
+                  <InputOTP maxLength={6} value={emailOtp} onChange={setEmailOtp}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                  <Button type="button" onClick={verifyEmailOtp} size="sm">
+                    Verify
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {emailVerified && (
+              <p className="text-sm text-green-600">✓ Email verified</p>
+            )}
           </div>
 
+          {/* Phone Verification */}
           <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
-              required
-            />
+            <div className="flex gap-2">
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                required
+                disabled={phoneVerified}
+                className={phoneVerified ? 'bg-green-50 border-green-300' : ''}
+              />
+              {!phoneVerified && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={sendPhoneOtp}
+                  disabled={phoneOtpSent}
+                >
+                  {phoneOtpSent ? 'OTP Sent' : 'Send OTP'}
+                </Button>
+              )}
+            </div>
+            
+            {phoneOtpSent && !phoneVerified && (
+              <div className="space-y-2">
+                <Label>Enter Phone OTP (Demo: use 123456)</Label>
+                <div className="flex gap-2 items-center">
+                  <InputOTP maxLength={6} value={phoneOtp} onChange={setPhoneOtp}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                  <Button type="button" onClick={verifyPhoneOtp} size="sm">
+                    Verify
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {phoneVerified && (
+              <p className="text-sm text-green-600">✓ Phone verified</p>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
-              <Select value={formData.department} onValueChange={(value) => handleChange('department', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="IT">Information Technology</SelectItem>
-                  <SelectItem value="HR">Human Resources</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Operations">Operations</SelectItem>
-                  <SelectItem value="Sales">Sales</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="position">Position</Label>
-              <Input
-                id="position"
-                value={formData.position}
-                onChange={(e) => handleChange('position', e.target.value)}
-                required
-              />
-            </div>
+          {/* Experience Dropdown */}
+          <div className="space-y-2">
+            <Label htmlFor="experience">Experience</Label>
+            <Select value={formData.experience} onValueChange={(value) => handleChange('experience', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select experience level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0-1">0-1 years</SelectItem>
+                <SelectItem value="1-2">1-2 years</SelectItem>
+                <SelectItem value="2-3">2-3 years</SelectItem>
+                <SelectItem value="3-5">3-5 years</SelectItem>
+                <SelectItem value="5-10">5-10 years</SelectItem>
+                <SelectItem value="10+">10+ years</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
