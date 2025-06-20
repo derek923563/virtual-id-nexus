@@ -1,0 +1,73 @@
+
+import React from 'react';
+import { Member } from '../types';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, Mail, Phone, MapPin, Briefcase } from 'lucide-react';
+
+interface VirtualIdCardProps {
+  member: Member;
+  showFullDetails?: boolean;
+}
+
+const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails = false }) => {
+  return (
+    <div className="max-w-md mx-auto">
+      <Card className="p-6 bg-gradient-to-br from-blue-600 to-blue-800 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold">Virtual ID Card</h3>
+              <p className="text-blue-200 text-sm">ID: {member.uniqueId}</p>
+            </div>
+            <Badge variant="secondary" className={`${member.status === 'active' ? 'bg-green-500' : 'bg-red-500'} text-white`}>
+              {member.status}
+            </Badge>
+          </div>
+          
+          <div className="text-center mb-4">
+            <div className="w-20 h-20 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
+              {member.firstName[0]}{member.lastName[0]}
+            </div>
+            <h2 className="text-xl font-bold">{member.firstName} {member.lastName}</h2>
+            <p className="text-blue-200">{member.position}</p>
+            <p className="text-blue-300 text-sm">{member.department}</p>
+          </div>
+        </div>
+      </Card>
+      
+      {showFullDetails && (
+        <Card className="mt-4 p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Contact Information</h3>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <Mail className="h-4 w-4 text-blue-600" />
+              <span className="text-sm">{member.email}</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Phone className="h-4 w-4 text-blue-600" />
+              <span className="text-sm">{member.phone}</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <MapPin className="h-4 w-4 text-blue-600" />
+              <span className="text-sm">{member.address}</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Calendar className="h-4 w-4 text-blue-600" />
+              <span className="text-sm">Joined: {new Date(member.joinDate).toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Briefcase className="h-4 w-4 text-blue-600" />
+              <span className="text-sm">DOB: {new Date(member.dateOfBirth).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default VirtualIdCard;
