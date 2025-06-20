@@ -93,12 +93,8 @@ const UserDashboard: React.FC = () => {
                   <span className="font-mono text-blue-600">{member.uniqueId}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="font-medium">Department</span>
-                  <span>{member.department}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="font-medium">Position</span>
-                  <span>{member.position}</span>
+                  <span className="font-medium">Experience</span>
+                  <span>{member.experience}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="font-medium">Join Date</span>

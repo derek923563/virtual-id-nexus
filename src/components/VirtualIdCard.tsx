@@ -33,8 +33,7 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails =
               {member.firstName[0]}{member.lastName[0]}
             </div>
             <h2 className="text-xl font-bold">{member.firstName} {member.lastName}</h2>
-            <p className="text-blue-200">{member.position}</p>
-            <p className="text-blue-300 text-sm">{member.department}</p>
+            <p className="text-blue-200">{member.experience} Experience</p>
           </div>
         </div>
       </Card>

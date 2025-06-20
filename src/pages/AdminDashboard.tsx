@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Member } from '../types';
 import { getMembers, deleteMember } from '../utils/memberUtils';
@@ -147,7 +148,7 @@ const AdminDashboard: React.FC = () => {
                     <TableHead>ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Department</TableHead>
+                    <TableHead>Experience</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -160,7 +161,7 @@ const AdminDashboard: React.FC = () => {
                         {member.firstName} {member.lastName}
                       </TableCell>
                       <TableCell>{member.email}</TableCell>
-                      <TableCell>{member.department}</TableCell>
+                      <TableCell>{member.experience}</TableCell>
                       <TableCell>
                         <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
                           {member.status}
