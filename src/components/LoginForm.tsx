@@ -8,7 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle, IdCard } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onRegisterClick?: () => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -87,6 +91,19 @@ const LoginForm: React.FC = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
+          
+          {onRegisterClick && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600 mb-2">Don't have an account?</p>
+              <Button 
+                variant="outline" 
+                onClick={onRegisterClick}
+                className="w-full"
+              >
+                Register as Member
+              </Button>
+            </div>
+          )}
           
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <p className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</p>

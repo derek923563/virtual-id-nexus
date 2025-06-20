@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Member } from '../types';
 import { getMembers, deleteMember } from '../utils/memberUtils';
@@ -11,14 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Search, Edit, Trash2, Eye, LogOut, Users } from 'lucide-react';
+import { Search, Edit, Trash2, Eye, LogOut, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const AdminDashboard: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | undefined>();
   const [viewingMember, setViewingMember] = useState<Member | undefined>();
   const { logout } = useAuth();
@@ -53,8 +51,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleRegistrationSuccess = () => {
-    setShowRegistrationForm(false);
+  const handleEditSuccess = () => {
     setEditingMember(undefined);
     loadMembers();
   };
@@ -129,15 +126,8 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Member Management</CardTitle>
-            <Button 
-              onClick={() => setShowRegistrationForm(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Member
-            </Button>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2 mb-6">
@@ -219,15 +209,12 @@ const AdminDashboard: React.FC = () => {
         </Card>
       </main>
 
-      {(showRegistrationForm || editingMember) && (
+      {editingMember && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <MemberRegistrationForm
             member={editingMember}
-            onSuccess={handleRegistrationSuccess}
-            onCancel={() => {
-              setShowRegistrationForm(false);
-              setEditingMember(undefined);
-            }}
+            onSuccess={handleEditSuccess}
+            onCancel={() => setEditingMember(undefined)}
           />
         </div>
       )}
