@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Member } from '../types';
 import { generateUniqueId, saveMember } from '../utils/memberUtils';
@@ -29,7 +28,9 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
     experience: member?.experience || '',
     dateOfBirth: member?.dateOfBirth || '',
     address: member?.address || '',
-    status: member?.status || 'active'
+    status: member?.status || 'active',
+    password: '',
+    confirmPassword: ''
   });
 
   const [emailOtp, setEmailOtp] = useState('');
@@ -38,6 +39,45 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
   const [phoneVerified, setPhoneVerified] = useState(!!member);
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [passwordMatch, setPasswordMatch] = useState(true);
+
+  const validatePassword = (password: string) => {
+    const errors: string[] = [];
+    
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters long');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+    if (!/\d/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('Password must contain at least one special character');
+    }
+    
+    return errors;
+  };
+
+  const handlePasswordChange = (password: string) => {
+    setFormData(prev => ({ ...prev, password }));
+    const errors = validatePassword(password);
+    setPasswordErrors(errors);
+    
+    if (formData.confirmPassword) {
+      setPasswordMatch(password === formData.confirmPassword);
+    }
+  };
+
+  const handleConfirmPasswordChange = (confirmPassword: string) => {
+    setFormData(prev => ({ ...prev, confirmPassword }));
+    setPasswordMatch(formData.password === confirmPassword);
+  };
 
   const sendEmailOtp = () => {
     if (!formData.email) {
@@ -131,11 +171,45 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
       });
       return;
     }
+
+    if (passwordErrors.length > 0) {
+      toast({
+        title: "Password Invalid",
+        description: "Please fix password requirements before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!passwordMatch) {
+      toast({
+        title: "Passwords Don't Match",
+        description: "Please ensure both passwords match.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.password) {
+      toast({
+        title: "Password Required",
+        description: "Please enter a password.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     const newMember: Member = {
       id: member?.id || Date.now().toString(),
       uniqueId: member?.uniqueId || generateUniqueId(),
-      ...formData,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      experience: formData.experience,
+      dateOfBirth: formData.dateOfBirth,
+      address: formData.address,
+      password: formData.password,
       joinDate: member?.joinDate || new Date().toISOString(),
       status: formData.status as 'active' | 'inactive'
     };
@@ -278,6 +352,44 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
             
             {phoneVerified && (
               <p className="text-sm text-green-600">✓ Phone verified</p>
+            )}
+          </div>
+
+          {/* Password Fields */}
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => handlePasswordChange(e.target.value)}
+              required
+              className={passwordErrors.length > 0 ? 'border-red-500' : ''}
+            />
+            {passwordErrors.length > 0 && (
+              <div className="space-y-1">
+                {passwordErrors.map((error, index) => (
+                  <p key={index} className="text-sm text-red-600">• {error}</p>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+              required
+              className={!passwordMatch && formData.confirmPassword ? 'border-red-500' : ''}
+            />
+            {!passwordMatch && formData.confirmPassword && (
+              <p className="text-sm text-red-600">• Passwords do not match</p>
+            )}
+            {passwordMatch && formData.confirmPassword && formData.password && (
+              <p className="text-sm text-green-600">✓ Passwords match</p>
             )}
           </div>
 
