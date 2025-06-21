@@ -9,10 +9,14 @@ import { ProfileSection } from './dashboard/ProfileSection';
 import { SettingsSection } from './dashboard/SettingsSection';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 
-export const DashboardContent: React.FC = () => {
+interface DashboardContentProps {
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+}
+
+export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const [member, setMember] = useState<Member | null>(null);
   const [activeSection, setActiveSection] = useState("dashboard");
   const { user, logout } = useAuth();
@@ -70,7 +74,14 @@ export const DashboardContent: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <SidebarTrigger />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="h-7 w-7"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Welcome, {member.firstName}</h1>
                 <p className="text-gray-600">Member ID: {member.uniqueId}</p>

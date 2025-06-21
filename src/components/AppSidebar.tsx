@@ -1,87 +1,82 @@
 
 import React from 'react';
-import { Home, Calendar, User, Settings } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
+import { Home, Calendar, User, Settings, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const menuItems = [
   {
     title: "Dashboard",
-    url: "#dashboard",
     icon: Home,
     id: "dashboard"
   },
   {
     title: "Events",
-    url: "#events", 
     icon: Calendar,
     id: "events"
   },
   {
     title: "Profile",
-    url: "#profile",
     icon: User,
     id: "profile"
   },
   {
     title: "Settings",
-    url: "#settings",
     icon: Settings,
     id: "settings"
   },
 ];
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+}
+
+export function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarProps) {
   const [activeSection, setActiveSection] = React.useState("dashboard");
 
+  const handleMenuClick = (itemId: string) => {
+    setActiveSection(itemId);
+    window.dispatchEvent(new CustomEvent('sectionChange', { detail: itemId }));
+    // Close sidebar on mobile after selection
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   return (
-    <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center space-x-2">
-          <SidebarTrigger />
-          <h2 className="text-lg font-semibold">Member Portal</h2>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild
-                    isActive={activeSection === item.id}
-                    onClick={() => setActiveSection(item.id)}
-                  >
-                    <button 
-                      className="w-full"
-                      onClick={() => {
-                        setActiveSection(item.id);
-                        // Dispatch custom event to update main content
-                        window.dispatchEvent(new CustomEvent('sectionChange', { detail: item.id }));
-                      }}
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Member Portal</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSidebarOpen(false)}
+          className="h-7 w-7 lg:hidden"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="flex-1 p-4">
+        <nav className="space-y-2">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleMenuClick(item.id)}
+              className={`
+                w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors
+                ${activeSection === item.id 
+                  ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                  : 'text-gray-700 hover:bg-gray-100'
+                }
+              `}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="font-medium">{item.title}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
+    </div>
   );
 }

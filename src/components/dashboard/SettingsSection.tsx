@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,14 @@ import { toast } from '@/hooks/use-toast';
 import { Settings, Moon, Sun, Lock, Globe, MessageSquare, Eye, EyeOff } from 'lucide-react';
 
 export const SettingsSection: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
-  const [language, setLanguage] = useState('en');
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('darkMode') === 'true' || false;
+  });
+  
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('language') || 'en';
+  });
+  
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -25,6 +31,36 @@ export const SettingsSection: React.FC = () => {
 
   const [feedback, setFeedback] = useState('');
 
+  // Apply dark mode when it changes
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', darkMode.toString());
+  }, [darkMode]);
+
+  // Save language preference
+  useEffect(() => {
+    localStorage.setItem('language', language);
+    // Here you would typically update the app's language
+    toast({
+      title: "Language Updated",
+      description: `Language changed to ${getLanguageName(language)}`,
+    });
+  }, [language]);
+
+  const getLanguageName = (code: string) => {
+    const languages = {
+      'en': 'English',
+      'es': 'Spanish', 
+      'fr': 'French',
+      'de': 'German'
+    };
+    return languages[code as keyof typeof languages] || 'English';
+  };
+
   const handlePasswordChange = () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
@@ -35,7 +71,6 @@ export const SettingsSection: React.FC = () => {
       return;
     }
     
-    // In a real app, this would call an API to change the password
     toast({
       title: "Password Changed",
       description: "Your password has been successfully updated.",
@@ -58,7 +93,6 @@ export const SettingsSection: React.FC = () => {
       return;
     }
     
-    // In a real app, this would submit feedback via API
     toast({
       title: "Feedback Submitted",
       description: "Thank you for your feedback!",
@@ -68,7 +102,7 @@ export const SettingsSection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-4xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
         <p className="text-gray-600">Manage your account preferences</p>
