@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email: string;
@@ -18,4 +19,12 @@ export interface Member {
   joinDate: string;
   status: 'active' | 'inactive';
   password: string;
+  confirmPassword: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
 }
