@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { User, Save } from 'lucide-react';
+import { User } from 'lucide-react';
 
 interface ProfileSectionProps {
   member: Member;
@@ -21,11 +21,23 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member }) => {
   });
 
   const handleSave = () => {
-    // In a real app, this would update the member data via API
     toast({
       title: "Profile Updated",
       description: "Your profile has been successfully updated.",
     });
+    // Redirect to dashboard
+    window.dispatchEvent(new CustomEvent('sectionChange', { detail: 'dashboard' }));
+  };
+
+  const handleCancel = () => {
+    // Reset form data to original values
+    setFormData({
+      experience: member.experience,
+      dateOfBirth: member.dateOfBirth,
+      address: member.address,
+    });
+    // Redirect to dashboard
+    window.dispatchEvent(new CustomEvent('sectionChange', { detail: 'dashboard' }));
   };
 
   return (
@@ -35,93 +47,120 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member }) => {
         <p className="text-gray-600">Update your profile information</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Read-only Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <User className="h-5 w-5" />
-              <span>Account Information</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <User className="h-5 w-5" />
+            <span>Profile Information</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Non-editable fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-medium text-gray-500">Full Name</Label>
-              <p className="text-lg font-semibold">{member.firstName} {member.lastName}</p>
-              <p className="text-sm text-gray-500">Name cannot be changed</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-500">Email</Label>
-              <p className="text-lg font-semibold">{member.email}</p>
-              <p className="text-sm text-gray-500">Email cannot be changed</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-500">Phone Number</Label>
-              <p className="text-lg font-semibold">{member.phone}</p>
-              <p className="text-sm text-gray-500">Phone number cannot be changed</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-500">Member ID</Label>
-              <p className="text-lg font-semibold font-mono">{member.uniqueId}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-500">Join Date</Label>
-              <p className="text-lg font-semibold">{new Date(member.joinDate).toLocaleDateString()}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Editable Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Editable Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="experience">Experience Level</Label>
-              <Select 
-                value={formData.experience} 
-                onValueChange={(value) => setFormData({...formData, experience: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Beginner">Beginner</SelectItem>
-                  <SelectItem value="Intermediate">Intermediate</SelectItem>
-                  <SelectItem value="Advanced">Advanced</SelectItem>
-                  <SelectItem value="Expert">Expert</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Label className="text-sm font-medium">First Name</Label>
               <Input
-                id="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
-                onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
+                value={member.firstName}
+                disabled
+                className="bg-gray-100 text-gray-500 cursor-not-allowed"
               />
             </div>
-
             <div>
-              <Label htmlFor="address">Address</Label>
+              <Label className="text-sm font-medium">Last Name</Label>
               <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
-                placeholder="Enter your address"
+                value={member.lastName}
+                disabled
+                className="bg-gray-100 text-gray-500 cursor-not-allowed"
               />
             </div>
+          </div>
 
-            <Button onClick={handleSave} className="w-full">
-              <Save className="h-4 w-4 mr-2" />
+          <div>
+            <Label className="text-sm font-medium">Email</Label>
+            <Input
+              value={member.email}
+              disabled
+              className="bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Phone Number</Label>
+            <Input
+              value={member.phone}
+              disabled
+              className="bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Member ID</Label>
+            <Input
+              value={member.uniqueId}
+              disabled
+              className="bg-gray-100 text-gray-500 cursor-not-allowed font-mono"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Join Date</Label>
+            <Input
+              value={new Date(member.joinDate).toLocaleDateString()}
+              disabled
+              className="bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
+          </div>
+
+          {/* Editable fields */}
+          <div>
+            <Label htmlFor="experience">Experience Level</Label>
+            <Select 
+              value={formData.experience} 
+              onValueChange={(value) => setFormData({...formData, experience: value})}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Beginner">Beginner</SelectItem>
+                <SelectItem value="Intermediate">Intermediate</SelectItem>
+                <SelectItem value="Advanced">Advanced</SelectItem>
+                <SelectItem value="Expert">Expert</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="dateOfBirth">Date of Birth</Label>
+            <Input
+              id="dateOfBirth"
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              placeholder="Enter your address"
+            />
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex space-x-4 pt-4">
+            <Button onClick={handleCancel} variant="outline" className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="flex-1">
               Save Changes
             </Button>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
