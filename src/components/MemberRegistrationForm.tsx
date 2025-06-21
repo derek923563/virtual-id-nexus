@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { toast } from '@/hooks/use-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface MemberRegistrationFormProps {
   member?: Member;
@@ -41,6 +42,8 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [passwordMatch, setPasswordMatch] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validatePassword = (password: string) => {
     const errors: string[] = [];
@@ -356,17 +359,32 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
             )}
           </div>
 
-          {/* Password Fields */}
+          {/* Password Fields with Eye Toggle */}
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => handlePasswordChange(e.target.value)}
-              required
-              className={passwordErrors.length > 0 ? 'border-red-500' : ''}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => handlePasswordChange(e.target.value)}
+                required
+                className={passwordErrors.length > 0 ? 'border-red-500 pr-10' : 'pr-10'}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+              </Button>
+            </div>
             {passwordErrors.length > 0 && (
               <div className="space-y-1">
                 {passwordErrors.map((error, index) => (
@@ -378,14 +396,29 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => handleConfirmPasswordChange(e.target.value)}
-              required
-              className={!passwordMatch && formData.confirmPassword ? 'border-red-500' : ''}
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                required
+                className={!passwordMatch && formData.confirmPassword ? 'border-red-500 pr-10' : 'pr-10'}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+              </Button>
+            </div>
             {!passwordMatch && formData.confirmPassword && (
               <p className="text-sm text-red-600">• Passwords do not match</p>
             )}
