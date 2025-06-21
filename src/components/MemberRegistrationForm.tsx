@@ -210,6 +210,7 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
       dateOfBirth: formData.dateOfBirth,
       address: formData.address,
       password: formData.password,
+      confirmPassword: formData.confirmPassword,
       joinDate: member?.joinDate || new Date().toISOString(),
       status: formData.status as 'active' | 'inactive'
     };
