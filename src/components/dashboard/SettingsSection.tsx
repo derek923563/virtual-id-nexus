@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,9 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { Settings, Moon, Sun, Lock, Globe, MessageSquare, Eye, EyeOff } from 'lucide-react';
+import { Settings, Moon, Sun, Lock, Globe, MessageSquare, Eye, EyeOff, Palette } from 'lucide-react';
+import { themes, getTheme, setTheme, isThemeUnlocked } from '../../utils/themeSystem';
+import { calculateUserScore } from '../../utils/achievementSystem';
+import { useAuth } from '../../context/AuthContext';
+import { getMemberById } from '../../utils/memberUtils';
 
 export const SettingsSection: React.FC = () => {
+  const { user } = useAuth();
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true' || false;
   });
@@ -18,6 +22,8 @@ export const SettingsSection: React.FC = () => {
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('language') || 'en';
   });
+
+  const [selectedTheme, setSelectedTheme] = useState(() => getTheme().id);
   
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -30,6 +36,11 @@ export const SettingsSection: React.FC = () => {
   });
 
   const [feedback, setFeedback] = useState('');
+
+  // Get member data for theme unlock check
+  const member = user?.memberId ? getMemberById(user.memberId) : null;
+  const userScore = member ? calculateUserScore(member) : { totalPoints: 0 };
+  const themesUnlocked = isThemeUnlocked(userScore.totalPoints);
 
   // Apply dark mode when it changes
   useEffect(() => {
@@ -44,7 +55,6 @@ export const SettingsSection: React.FC = () => {
   // Save language preference
   useEffect(() => {
     localStorage.setItem('language', language);
-    // Here you would typically update the app's language
     toast({
       title: "Language Updated",
       description: `Language changed to ${getLanguageName(language)}`,
@@ -59,6 +69,27 @@ export const SettingsSection: React.FC = () => {
       'de': 'German'
     };
     return languages[code as keyof typeof languages] || 'English';
+  };
+
+  const handleThemeChange = (themeId: string) => {
+    if (!themesUnlocked) {
+      toast({
+        title: "Theme Locked",
+        description: "Reach 100 points to unlock theme customization!",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setTheme(themeId);
+    setSelectedTheme(themeId);
+    toast({
+      title: "Theme Updated",
+      description: `Theme changed to ${themes.find(t => t.id === themeId)?.name}`,
+    });
+    
+    // Refresh the page to apply theme changes
+    setTimeout(() => window.location.reload(), 500);
   };
 
   const handlePasswordChange = () => {
@@ -146,6 +177,48 @@ export const SettingsSection: React.FC = () => {
                   <SelectItem value="de">German</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Theme Customization */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Palette className="h-5 w-5" />
+              <span>Appearance</span>
+              {!themesUnlocked && (
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                  Unlock at 100 points
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="mb-2 block">ID Card Theme</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {themes.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => handleThemeChange(theme.id)}
+                    disabled={!themesUnlocked}
+                    className={`
+                      p-3 rounded-lg border-2 transition-all duration-200
+                      ${selectedTheme === theme.id ? 'border-blue-500 shadow-md' : 'border-gray-200'}
+                      ${themesUnlocked ? 'hover:border-blue-300 cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+                    `}
+                  >
+                    <div className={`w-full h-8 rounded ${theme.gradient} mb-2`}></div>
+                    <div className="text-sm font-medium text-gray-700">{theme.name}</div>
+                  </button>
+                ))}
+              </div>
+              {!themesUnlocked && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Current score: {userScore.totalPoints}/100 points
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

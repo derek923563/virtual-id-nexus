@@ -1,20 +1,30 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Member } from '../../types';
 import VirtualIdCard from '../VirtualIdCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Star, Award } from 'lucide-react';
+import { Trophy, Star, Award, TrendingUp } from 'lucide-react';
+import { calculateUserScore, addPoints } from '../../utils/achievementSystem';
 
 interface DashboardHomeProps {
   member: Member;
 }
 
 export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
-  // Mock score data - in a real app this would come from the member data
-  const memberScore = 850;
+  const userScore = calculateUserScore(member);
   const maxScore = 1000;
-  const rank = "Gold";
+
+  // Award points for visiting dashboard (simulate engagement)
+  useEffect(() => {
+    const lastVisit = localStorage.getItem(`last_visit_${member.id}`);
+    const today = new Date().toDateString();
+    
+    if (lastVisit !== today) {
+      addPoints(member.id, 10); // Daily visit bonus
+      localStorage.setItem(`last_visit_${member.id}`, today);
+    }
+  }, [member.id]);
 
   return (
     <div className="space-y-8">
@@ -43,17 +53,17 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
             </CardHeader>
             <CardContent>
               <div className="text-center space-y-4">
-                <div className="text-4xl font-bold text-blue-600">{memberScore}</div>
+                <div className="text-4xl font-bold text-blue-600">{userScore.totalPoints}</div>
                 <div className="text-sm text-gray-600">out of {maxScore}</div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full" 
-                    style={{ width: `${(memberScore / maxScore) * 100}%` }}
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                    style={{ width: `${Math.min((userScore.totalPoints / maxScore) * 100, 100)}%` }}
                   ></div>
                 </div>
                 <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                   <Award className="h-3 w-3 mr-1" />
-                  {rank} Member
+                  {userScore.level} - {userScore.title}
                 </Badge>
               </div>
             </CardContent>
@@ -82,6 +92,13 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
                 <span className="font-medium">
                   {new Date(member.joinDate).toLocaleDateString()}
                 </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Achievements</span>
+                <div className="flex items-center space-x-1">
+                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <span className="font-medium">{userScore.achievements.length}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
