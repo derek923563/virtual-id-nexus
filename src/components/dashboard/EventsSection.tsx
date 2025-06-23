@@ -1,84 +1,38 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, MapPin } from 'lucide-react';
+import { Event } from '../../types/events';
+import { getEvents } from '../../utils/eventUtils';
 
 export const EventsSection: React.FC = () => {
-  // Mock event data - in a real app this would come from an API
-  const currentEvents = [
-    {
-      id: 1,
-      title: "Annual Conference 2024",
-      date: "2024-06-25",
-      time: "09:00 AM",
-      location: "Main Auditorium",
-      status: "ongoing"
-    }
-  ];
+  const [events, setEvents] = useState<Event[]>([]);
 
-  const upcomingEvents = [
-    {
-      id: 2,
-      title: "Networking Meetup",
-      date: "2024-07-15",
-      time: "06:00 PM",
-      location: "Community Center",
-      status: "upcoming"
-    },
-    {
-      id: 3,
-      title: "Workshop: Professional Development",
-      date: "2024-08-02",
-      time: "02:00 PM",
-      location: "Room 101",
-      status: "upcoming"
-    }
-  ];
+  useEffect(() => {
+    const loadedEvents = getEvents();
+    setEvents(loadedEvents);
+  }, []);
 
-  const expiredEvents = [
-    {
-      id: 4,
-      title: "Monthly Gathering",
-      date: "2024-05-20",
-      time: "07:00 PM",
-      location: "Main Hall",
-      status: "expired"
-    },
-    {
-      id: 5,
-      title: "Skills Assessment",
-      date: "2024-04-15",
-      time: "10:00 AM",
-      location: "Testing Center",
-      status: "expired"
-    }
-  ];
+  // Categorize events based on dates (for demo purposes, we'll treat all as upcoming)
+  const currentEvents = events.filter(event => events.indexOf(event) === 0); // First event as current
+  const upcomingEvents = events.filter(event => events.indexOf(event) > 0); // Rest as upcoming
+  const expiredEvents: Event[] = []; // No expired events for now
 
-  const EventCard = ({ event }: { event: any }) => (
+  const EventCard = ({ event }: { event: Event }) => (
     <Card className="mb-4">
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg">{event.title}</h3>
-          <Badge 
-            variant={event.status === 'ongoing' ? 'default' : 
-                    event.status === 'upcoming' ? 'secondary' : 'outline'}
-          >
-            {event.status}
+          <h3 className="font-semibold text-lg">{event.name}</h3>
+          <Badge variant="secondary">
+            {event.points} points
           </Badge>
         </div>
         <div className="space-y-2 text-sm text-gray-600">
+          <p>{event.description}</p>
           <div className="flex items-center space-x-2">
             <Calendar className="h-4 w-4" />
-            <span>{new Date(event.date).toLocaleDateString()}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Clock className="h-4 w-4" />
-            <span>{event.time}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <MapPin className="h-4 w-4" />
-            <span>{event.location}</span>
+            <span>Event Date: TBD</span>
           </div>
         </div>
       </CardContent>
@@ -125,18 +79,14 @@ export const EventsSection: React.FC = () => {
           </Card>
         </div>
 
-        {/* Expired Events */}
+        {/* Past Events */}
         <div>
           <Card>
             <CardHeader>
               <CardTitle className="text-gray-600">Past Events</CardTitle>
             </CardHeader>
             <CardContent>
-              {expiredEvents.length > 0 ? (
-                expiredEvents.map(event => <EventCard key={event.id} event={event} />)
-              ) : (
-                <p className="text-gray-500 text-center py-4">No past events</p>
-              )}
+              <p className="text-gray-500 text-center py-4">No past events</p>
             </CardContent>
           </Card>
         </div>

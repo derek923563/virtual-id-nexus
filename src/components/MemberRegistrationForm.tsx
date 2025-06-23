@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Member } from '../types';
-import { generateUniqueId, saveMember } from '../utils/memberUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from '@radix-ui/react-icons';
+import { format } from 'date-fns';
+import { DatePicker } from "@/components/ui/date-picker"
 import { toast } from '@/hooks/use-toast';
-import { Eye, EyeOff } from 'lucide-react';
 
 interface MemberRegistrationFormProps {
   member?: Member;
@@ -16,206 +18,87 @@ interface MemberRegistrationFormProps {
   onCancel: () => void;
 }
 
-const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
-  member, 
-  onSuccess, 
-  onCancel 
-}) => {
+const generateUniqueId = () => {
+  return 'M-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+};
+
+export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ member, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
-    firstName: member?.firstName || '',
-    lastName: member?.lastName || '',
-    username: member?.username || '',
-    email: member?.email || '',
-    phone: member?.phone || '',
-    experience: member?.experience || '',
-    dateOfBirth: member?.dateOfBirth || '',
-    address: member?.address || '',
-    status: member?.status || 'active',
-    password: '',
-    confirmPassword: ''
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    phone: '',
+    experience: '',
+    dateOfBirth: '',
+    address: '',
+    status: 'active'
   });
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
-  const [emailOtp, setEmailOtp] = useState('');
-  const [phoneOtp, setPhoneOtp] = useState('');
-  const [emailVerified, setEmailVerified] = useState(!!member);
-  const [phoneVerified, setPhoneVerified] = useState(!!member);
-  const [emailOtpSent, setEmailOtpSent] = useState(false);
-  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
-  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-  const [passwordMatch, setPasswordMatch] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  useEffect(() => {
+    if (member) {
+      setFormData({
+        firstName: member.firstName || '',
+        lastName: member.lastName || '',
+        username: member.username || '',
+        email: member.email || '',
+        phone: member.phone || '',
+        experience: member.experience || '',
+        dateOfBirth: member.dateOfBirth || '',
+        address: member.address || '',
+        status: member.status || 'active'
+      });
+    }
+  }, [member]);
 
-  const validatePassword = (password: string) => {
-    const errors: string[] = [];
-    
-    if (password.length < 8) {
-      errors.push('Password must be at least 8 characters long');
+  const validateForm = () => {
+    let errors: { [key: string]: string } = {};
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'First name is required';
     }
-    if (!/[A-Z]/.test(password)) {
-      errors.push('Password must contain at least one uppercase letter');
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'Last name is required';
     }
-    if (!/[a-z]/.test(password)) {
-      errors.push('Password must contain at least one lowercase letter');
+     if (!formData.username.trim()) {
+      errors.username = 'Username is required';
     }
-    if (!/\d/.test(password)) {
-      errors.push('Password must contain at least one number');
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Invalid email format';
     }
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      errors.push('Password must contain at least one special character');
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone is required';
     }
-    
+    if (!formData.address.trim()) {
+      errors.address = 'Address is required';
+    }
     return errors;
-  };
-
-  const handlePasswordChange = (password: string) => {
-    setFormData(prev => ({ ...prev, password }));
-    const errors = validatePassword(password);
-    setPasswordErrors(errors);
-    
-    if (formData.confirmPassword) {
-      setPasswordMatch(password === formData.confirmPassword);
-    }
-  };
-
-  const handleConfirmPasswordChange = (confirmPassword: string) => {
-    setFormData(prev => ({ ...prev, confirmPassword }));
-    setPasswordMatch(formData.password === confirmPassword);
-  };
-
-  const sendEmailOtp = () => {
-    if (!formData.email) {
-      toast({
-        title: "Error",
-        description: "Please enter your email first.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Simulate sending OTP
-    console.log('Sending email OTP to:', formData.email);
-    setEmailOtpSent(true);
-    toast({
-      title: "OTP Sent",
-      description: "Please check your email for the verification code.",
-    });
-  };
-
-  const sendPhoneOtp = () => {
-    if (!formData.phone) {
-      toast({
-        title: "Error",
-        description: "Please enter your phone number first.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Simulate sending OTP
-    console.log('Sending phone OTP to:', formData.phone);
-    setPhoneOtpSent(true);
-    toast({
-      title: "OTP Sent",
-      description: "Please check your phone for the verification code.",
-    });
-  };
-
-  const verifyEmailOtp = () => {
-    // Simulate OTP verification (in real app, this would call an API)
-    if (emailOtp === '123456') {
-      setEmailVerified(true);
-      toast({
-        title: "Email Verified",
-        description: "Your email has been successfully verified.",
-      });
-    } else {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter the correct OTP.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const verifyPhoneOtp = () => {
-    // Simulate OTP verification (in real app, this would call an API)
-    if (phoneOtp === '123456') {
-      setPhoneVerified(true);
-      toast({
-        title: "Phone Verified",
-        description: "Your phone number has been successfully verified.",
-      });
-    } else {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter the correct OTP.",
-        variant: "destructive"
-      });
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!emailVerified) {
-      toast({
-        title: "Email Not Verified",
-        description: "Please verify your email before submitting.",
-        variant: "destructive"
-      });
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
-    if (!phoneVerified) {
-      toast({
-        title: "Phone Not Verified",
-        description: "Please verify your phone number before submitting.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (passwordErrors.length > 0) {
-      toast({
-        title: "Password Invalid",
-        description: "Please fix password requirements before submitting.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!passwordMatch) {
-      toast({
-        title: "Passwords Don't Match",
-        description: "Please ensure both passwords match.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!formData.password) {
-      toast({
-        title: "Password Required",
-        description: "Please enter a password.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const newMember: Member = {
+    const memberData: Member = {
       id: member?.id || Date.now().toString(),
       uniqueId: member?.uniqueId || generateUniqueId(),
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      username: formData.username,
-      email: formData.email,
-      phone: formData.phone,
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      username: formData.username.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
       experience: formData.experience,
       dateOfBirth: formData.dateOfBirth,
-      address: formData.address,
-      password: formData.password,
-      confirmPassword: formData.confirmPassword,
+      address: formData.address.trim(),
+      password: member?.password || 'user123',
+      confirmPassword: member?.confirmPassword || 'user123',
       joinDate: member?.joinDate || new Date().toISOString(),
       status: formData.status as 'active' | 'inactive',
       eventParticipation: member?.eventParticipation || {
@@ -226,253 +109,124 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
       adminPoints: member?.adminPoints || 0
     };
 
-    saveMember(newMember);
+    // Save to localStorage
+    const members = JSON.parse(localStorage.getItem('members') || '[]');
+    const existingIndex = members.findIndex((m: Member) => m.id === memberData.id);
+    
+    if (existingIndex !== -1) {
+      members[existingIndex] = memberData;
+    } else {
+      members.push(memberData);
+    }
+    
+    localStorage.setItem('members', JSON.stringify(members));
+
     toast({
-      title: member ? "Member Updated" : "Member Registered",
-      description: `${newMember.firstName} ${newMember.lastName} has been ${member ? 'updated' : 'registered'} successfully.`,
+      title: member ? "Member Updated" : "Member Created",
+      description: `Member "${memberData.firstName} ${memberData.lastName}" has been ${member ? 'updated' : 'created'} successfully.`,
     });
+
     onSuccess();
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle>{member ? 'Edit Member' : 'Register New Member'}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
               <Input
                 id="firstName"
                 value={formData.firstName}
-                onChange={(e) => handleChange('firstName', e.target.value)}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                placeholder="Enter first name"
                 required
               />
+              {formErrors.firstName && <p className="text-red-500 text-sm">{formErrors.firstName}</p>}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name</Label>
               <Input
                 id="lastName"
                 value={formData.lastName}
-                onChange={(e) => handleChange('lastName', e.target.value)}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                placeholder="Enter last name"
                 required
               />
+              {formErrors.lastName && <p className="text-red-500 text-sm">{formErrors.lastName}</p>}
             </div>
           </div>
+          
+           <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                placeholder="Enter username"
+                required
+              />
+              {formErrors.username && <p className="text-red-500 text-sm">{formErrors.username}</p>}
+            </div>
 
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
-              id="username"
-              value={formData.username}
-              onChange={(e) => handleChange('username', e.target.value)}
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="Enter email address"
               required
-              placeholder="Choose a unique username"
             />
-          </div>
-
-          {/* Email Verification */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <div className="flex gap-2">
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                required
-                disabled={emailVerified}
-                className={emailVerified ? 'bg-green-50 border-green-300' : ''}
-              />
-              {!emailVerified && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={sendEmailOtp}
-                  disabled={emailOtpSent}
-                >
-                  {emailOtpSent ? 'OTP Sent' : 'Send OTP'}
-                </Button>
-              )}
-            </div>
-            
-            {emailOtpSent && !emailVerified && (
-              <div className="space-y-2">
-                <Label>Enter Email OTP (Demo: use 123456)</Label>
-                <div className="flex gap-2 items-center">
-                  <InputOTP maxLength={6} value={emailOtp} onChange={setEmailOtp}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                  <Button type="button" onClick={verifyEmailOtp} size="sm">
-                    Verify
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            {emailVerified && (
-              <p className="text-sm text-green-600">✓ Email verified</p>
-            )}
-          </div>
-
-          {/* Phone Verification */}
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
-            <div className="flex gap-2">
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                required
-                disabled={phoneVerified}
-                className={phoneVerified ? 'bg-green-50 border-green-300' : ''}
-              />
-              {!phoneVerified && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={sendPhoneOtp}
-                  disabled={phoneOtpSent}
-                >
-                  {phoneOtpSent ? 'OTP Sent' : 'Send OTP'}
-                </Button>
-              )}
-            </div>
-            
-            {phoneOtpSent && !phoneVerified && (
-              <div className="space-y-2">
-                <Label>Enter Phone OTP (Demo: use 123456)</Label>
-                <div className="flex gap-2 items-center">
-                  <InputOTP maxLength={6} value={phoneOtp} onChange={setPhoneOtp}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                  <Button type="button" onClick={verifyPhoneOtp} size="sm">
-                    Verify
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            {phoneVerified && (
-              <p className="text-sm text-green-600">✓ Phone verified</p>
-            )}
-          </div>
-
-          {/* Password Fields with Eye Toggle */}
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={(e) => handlePasswordChange(e.target.value)}
-                required
-                className={passwordErrors.length > 0 ? 'border-red-500 pr-10' : 'pr-10'}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-500" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-500" />
-                )}
-              </Button>
-            </div>
-            {passwordErrors.length > 0 && (
-              <div className="space-y-1">
-                {passwordErrors.map((error, index) => (
-                  <p key={index} className="text-sm text-red-600">• {error}</p>
-                ))}
-              </div>
-            )}
+            {formErrors.email && <p className="text-red-500 text-sm">{formErrors.email}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <div className="relative">
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                value={formData.confirmPassword}
-                onChange={(e) => handleConfirmPasswordChange(e.target.value)}
-                required
-                className={!passwordMatch && formData.confirmPassword ? 'border-red-500 pr-10' : 'pr-10'}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-500" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-500" />
-                )}
-              </Button>
-            </div>
-            {!passwordMatch && formData.confirmPassword && (
-              <p className="text-sm text-red-600">• Passwords do not match</p>
-            )}
-            {passwordMatch && formData.confirmPassword && formData.password && (
-              <p className="text-sm text-green-600">✓ Passwords match</p>
-            )}
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="Enter phone number"
+              required
+            />
+            {formErrors.phone && <p className="text-red-500 text-sm">{formErrors.phone}</p>}
           </div>
 
-          {/* Experience Dropdown */}
           <div className="space-y-2">
             <Label htmlFor="experience">Experience</Label>
-            <Select value={formData.experience} onValueChange={(value) => handleChange('experience', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select experience level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0-1">0-1 years</SelectItem>
-                <SelectItem value="1-2">1-2 years</SelectItem>
-                <SelectItem value="2-3">2-3 years</SelectItem>
-                <SelectItem value="3-5">3-5 years</SelectItem>
-                <SelectItem value="5-10">5-10 years</SelectItem>
-                <SelectItem value="10+">10+ years</SelectItem>
-              </SelectContent>
-            </Select>
+            <Textarea
+              id="experience"
+              value={formData.experience}
+              onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+              placeholder="Enter your experience"
+              rows={3}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="dateOfBirth">Date of Birth</Label>
-            <Input
+            <DatePicker
               id="dateOfBirth"
-              type="date"
-              value={formData.dateOfBirth}
-              onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-              required
+              onSelect={(date) => {
+                if (date) {
+                  const formattedDate = format(date, 'yyyy-MM-dd');
+                  setFormData({ ...formData, dateOfBirth: formattedDate });
+                }
+              }}
             />
+            {formData.dateOfBirth && (
+              <p className="text-gray-500 text-sm mt-1">
+                Selected Date: {formData.dateOfBirth}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -480,31 +234,31 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
             <Input
               id="address"
               value={formData.address}
-              onChange={(e) => handleChange('address', e.target.value)}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Enter address"
               required
             />
+            {formErrors.address && <p className="text-red-500 text-sm">{formErrors.address}</p>}
           </div>
 
-          {member && (
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" defaultValue={formData.status} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <div className="flex space-x-4 pt-4">
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+          <div className="flex space-x-2">
+            <Button type="submit" className="flex-1">
               {member ? 'Update Member' : 'Register Member'}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+            <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
           </div>
@@ -513,5 +267,3 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
     </Card>
   );
 };
-
-export default MemberRegistrationForm;
