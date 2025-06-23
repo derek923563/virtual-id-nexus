@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
-  const [email, setEmail] = useState('');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,9 +24,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
     setLoading(true);
 
     try {
-      const success = await login(email, password);
+      const success = await login(emailOrUsername, password);
       if (!success) {
-        setError('Invalid email or password');
+        setError('Invalid email/username or password');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -60,13 +59,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="emailOrUsername">Email or Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="emailOrUsername"
+                type="text"
+                placeholder="Enter your email or username"
+                value={emailOrUsername}
+                onChange={(e) => setEmailOrUsername(e.target.value)}
                 required
               />
             </div>

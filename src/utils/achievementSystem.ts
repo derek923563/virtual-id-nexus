@@ -61,6 +61,9 @@ export const calculateUserScore = (member: any): UserScore => {
     totalPoints += 30;
   }
   
+  // Add admin-awarded points
+  totalPoints += member.adminPoints || 0;
+  
   // Simulate additional points (in real app, this would come from actual activity)
   const storedPoints = localStorage.getItem(`user_points_${member.id}`) || '0';
   totalPoints += parseInt(storedPoints);

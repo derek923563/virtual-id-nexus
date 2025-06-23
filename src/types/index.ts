@@ -11,6 +11,7 @@ export interface Member {
   uniqueId: string;
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   phone: string;
   experience: string;
@@ -20,11 +21,17 @@ export interface Member {
   status: 'active' | 'inactive';
   password: string;
   confirmPassword: string;
+  eventParticipation: {
+    registeredEvents: string[];
+    missedEvents: number;
+    lastActivity: string;
+  };
+  adminPoints: number;
 }
 
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (emailOrUsername: string, password: string) => Promise<boolean>;
   logout: () => void;
 }

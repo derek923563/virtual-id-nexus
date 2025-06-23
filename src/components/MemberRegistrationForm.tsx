@@ -24,6 +24,7 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
   const [formData, setFormData] = useState({
     firstName: member?.firstName || '',
     lastName: member?.lastName || '',
+    username: member?.username || '',
     email: member?.email || '',
     phone: member?.phone || '',
     experience: member?.experience || '',
@@ -207,6 +208,7 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
       uniqueId: member?.uniqueId || generateUniqueId(),
       firstName: formData.firstName,
       lastName: formData.lastName,
+      username: formData.username,
       email: formData.email,
       phone: formData.phone,
       experience: formData.experience,
@@ -215,7 +217,13 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
       password: formData.password,
       confirmPassword: formData.confirmPassword,
       joinDate: member?.joinDate || new Date().toISOString(),
-      status: formData.status as 'active' | 'inactive'
+      status: formData.status as 'active' | 'inactive',
+      eventParticipation: member?.eventParticipation || {
+        registeredEvents: [],
+        missedEvents: 0,
+        lastActivity: new Date().toISOString()
+      },
+      adminPoints: member?.adminPoints || 0
     };
 
     saveMember(newMember);
@@ -256,6 +264,17 @@ const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              value={formData.username}
+              onChange={(e) => handleChange('username', e.target.value)}
+              required
+              placeholder="Choose a unique username"
+            />
           </div>
 
           {/* Email Verification */}

@@ -25,9 +25,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (emailOrUsername: string, password: string): Promise<boolean> => {
     // Admin credentials
-    if (email === 'admin@virtualid.com' && password === 'admin123') {
+    if (emailOrUsername === 'admin@virtualid.com' && password === 'admin123') {
       const adminUser: User = {
         id: 'admin-1',
         email: 'admin@virtualid.com',
@@ -39,9 +39,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
 
-    // Check for member login
+    // Check for member login by email or username
     const members = JSON.parse(localStorage.getItem('members') || '[]');
-    const member = members.find((m: any) => m.email === email);
+    const member = members.find((m: any) => 
+      m.email === emailOrUsername || m.username === emailOrUsername
+    );
     
     if (member && password === 'user123') {
       const memberUser: User = {

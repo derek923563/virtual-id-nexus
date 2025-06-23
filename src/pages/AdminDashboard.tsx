@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Member } from '../types';
 import { getMembers, deleteMember } from '../utils/memberUtils';
@@ -13,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Search, Edit, Trash2, Eye, LogOut, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { AdminPointsManager } from '../components/AdminPointsManager';
 
 const AdminDashboard: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
@@ -20,6 +20,7 @@ const AdminDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingMember, setEditingMember] = useState<Member | undefined>();
   const [viewingMember, setViewingMember] = useState<Member | undefined>();
+  const [managingPointsFor, setManagingPointsFor] = useState<Member | undefined>();
   const { logout } = useAuth();
 
   useEffect(() => {
@@ -147,8 +148,9 @@ const AdminDashboard: React.FC = () => {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Name</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Experience</TableHead>
+                    <TableHead>Points</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -160,8 +162,11 @@ const AdminDashboard: React.FC = () => {
                       <TableCell className="font-medium">
                         {member.firstName} {member.lastName}
                       </TableCell>
+                      <TableCell>{member.username}</TableCell>
                       <TableCell>{member.email}</TableCell>
-                      <TableCell>{member.experience}</TableCell>
+                      <TableCell className="font-bold text-blue-600">
+                        {member.adminPoints || 0}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
                           {member.status}
@@ -199,6 +204,14 @@ const AdminDashboard: React.FC = () => {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setManagingPointsFor(member)}
+                          >
+                            <span className="text-xs">Points</span>
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -217,6 +230,28 @@ const AdminDashboard: React.FC = () => {
             onSuccess={handleEditSuccess}
             onCancel={() => setEditingMember(undefined)}
           />
+        </div>
+      )}
+
+      {managingPointsFor && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="relative">
+            <AdminPointsManager
+              member={managingPointsFor}
+              onUpdate={() => {
+                loadMembers();
+                setManagingPointsFor(undefined);
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute -top-2 -right-2"
+              onClick={() => setManagingPointsFor(undefined)}
+            >
+              ✕
+            </Button>
+          </div>
         </div>
       )}
     </div>
