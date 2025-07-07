@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Member } from '../types';
 import { getMembers, deleteMember } from '../utils/memberUtils';
 import { useAuth } from '../context/AuthContext';
-import MemberRegistrationForm from '../components/MemberRegistrationForm';
+import { MemberRegistrationForm } from '../components/MemberRegistrationForm';
 import VirtualIdCard from '../components/VirtualIdCard';
 import { EventsManagement } from '../components/EventsManagement';
 import { Button } from '@/components/ui/button';

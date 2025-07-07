@@ -1,6 +1,6 @@
 
 import React from 'react';
-import MemberRegistrationForm from '../components/MemberRegistrationForm';
+import { MemberRegistrationForm } from '../components/MemberRegistrationForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 

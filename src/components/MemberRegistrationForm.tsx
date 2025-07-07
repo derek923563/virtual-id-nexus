@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from '@radix-ui/react-icons';
+import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { DatePicker } from "@/components/ui/date-picker"
 import { toast } from '@/hooks/use-toast';
