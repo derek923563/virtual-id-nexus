@@ -15,16 +15,8 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
   const userScore = calculateUserScore(member);
   const maxScore = 1000;
 
-  // Award points for visiting dashboard (simulate engagement)
-  useEffect(() => {
-    const lastVisit = localStorage.getItem(`last_visit_${member.id}`);
-    const today = new Date().toDateString();
-    
-    if (lastVisit !== today) {
-      addPoints(member.id, 10); // Daily visit bonus
-      localStorage.setItem(`last_visit_${member.id}`, today);
-    }
-  }, [member.id]);
+  // Note: Daily visit bonus should be handled via API, not localStorage
+  // This is just for demonstration - in a real app, this would call an API
 
   return (
     <div className="space-y-8">
@@ -48,7 +40,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Trophy className="h-5 w-5 text-yellow-500" />
-                <span>Member Score</span>
+                <span>Total Points</span>
               </CardTitle>
             </CardHeader>
             <CardContent>

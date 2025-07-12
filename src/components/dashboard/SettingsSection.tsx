@@ -11,7 +11,7 @@ import { Settings, Moon, Sun, Lock, Globe, MessageSquare, Eye, EyeOff, Palette }
 import { themes, getTheme, setTheme, isThemeUnlocked } from '../../utils/themeSystem';
 import { calculateUserScore } from '../../utils/achievementSystem';
 import { useAuth } from '../../context/AuthContext';
-import { getMemberById } from '../../utils/memberUtils';
+import { api } from '../../lib/api';
 
 export const SettingsSection: React.FC = () => {
   const { user } = useAuth();
@@ -37,12 +37,28 @@ export const SettingsSection: React.FC = () => {
 
   const [feedback, setFeedback] = useState('');
 
-  // Get member data for theme unlock check
-  const member = user?.memberId ? getMemberById(user.memberId) : null;
+  // Get member data for theme unlock check from backend
+  const [member, setMember] = useState(null);
+  useEffect(() => {
+    const fetchMember = async () => {
+      if (user?.username) {
+        try {
+          const res = await api.get(`/members?username=${user.username}`);
+          if (res && res.length > 0) setMember(res[0]);
+        } catch (e) {
+          setMember(null);
+        }
+      }
+    };
+    fetchMember();
+  }, [user]);
   const userScore = member ? calculateUserScore(member) : { totalPoints: 0 };
   const themesUnlocked = isThemeUnlocked(userScore.totalPoints);
 
-  // Apply dark mode when it changes
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+
+  // Apply dark mode instantly and persistently
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -51,6 +67,26 @@ export const SettingsSection: React.FC = () => {
     }
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
+
+  // Password criteria validation
+  function validatePassword(pw: string) {
+    let error = '';
+    if (pw.length < 8) error = 'At least 8 characters';
+    else if (!/[A-Z]/.test(pw)) error = 'At least 1 uppercase letter';
+    else if (!/[a-z]/.test(pw)) error = 'At least 1 lowercase letter';
+    else if (!/[0-9]/.test(pw)) error = 'At least 1 number';
+    else if (!/[^A-Za-z0-9]/.test(pw)) error = 'At least 1 special character';
+    return error;
+  }
+
+  useEffect(() => {
+    setPasswordError(validatePassword(passwordData.newPassword));
+    setConfirmPasswordError(
+      passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword
+        ? "Passwords do not match"
+        : ''
+    );
+  }, [passwordData.newPassword, passwordData.confirmPassword]);
 
   // Save language preference
   useEffect(() => {
@@ -92,26 +128,38 @@ export const SettingsSection: React.FC = () => {
     setTimeout(() => window.location.reload(), 500);
   };
 
-  const handlePasswordChange = () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
+  const handlePasswordChange = async () => {
+    if (passwordError || confirmPasswordError) {
       toast({
         title: "Error",
-        description: "New passwords don't match",
+        description: passwordError || confirmPasswordError,
         variant: "destructive"
       });
       return;
     }
-    
-    toast({
-      title: "Password Changed",
-      description: "Your password has been successfully updated.",
-    });
-    
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
+    try {
+      console.log('Changing password for userId:', member?.id);
+      const res = await api.put('/auth/change-password', {
+        userId: member?.id,
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+      toast({
+        title: "Password Changed",
+        description: res.message || "Your password has been successfully updated.",
+      });
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.response?.data?.message || "Failed to update password.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleFeedbackSubmit = () => {
@@ -133,15 +181,15 @@ export const SettingsSection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto bg-background text-foreground">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-gray-600">Manage your account preferences</p>
+        <h1 className="text-3xl font-bold mb-2">Settings</h1>
+        <p className="">Manage your account preferences</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Theme & Language Settings */}
-        <Card>
+        <Card className="bg-card text-card-foreground">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Settings className="h-5 w-5" />
@@ -182,7 +230,7 @@ export const SettingsSection: React.FC = () => {
         </Card>
 
         {/* Theme Customization */}
-        <Card>
+        <Card className="bg-card text-card-foreground">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Palette className="h-5 w-5" />
@@ -207,10 +255,11 @@ export const SettingsSection: React.FC = () => {
                       p-3 rounded-lg border-2 transition-all duration-200
                       ${selectedTheme === theme.id ? 'border-blue-500 shadow-md' : 'border-gray-200'}
                       ${themesUnlocked ? 'hover:border-blue-300 cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+                      bg-background text-foreground
                     `}
                   >
                     <div className={`w-full h-8 rounded ${theme.gradient} mb-2`}></div>
-                    <div className="text-sm font-medium text-gray-700">{theme.name}</div>
+                    <div className="text-sm font-medium">{theme.name}</div>
                   </button>
                 ))}
               </div>
@@ -224,7 +273,7 @@ export const SettingsSection: React.FC = () => {
         </Card>
 
         {/* Password Change */}
-        <Card>
+        <Card className="bg-card text-card-foreground">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Lock className="h-5 w-5" />
@@ -282,6 +331,7 @@ export const SettingsSection: React.FC = () => {
                   )}
                 </Button>
               </div>
+              {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
             </div>
 
             <div>
@@ -308,6 +358,7 @@ export const SettingsSection: React.FC = () => {
                   )}
                 </Button>
               </div>
+              {confirmPasswordError && <p className="text-red-500 text-sm">{confirmPasswordError}</p>}
             </div>
 
             <Button onClick={handlePasswordChange} className="w-full">
@@ -317,7 +368,7 @@ export const SettingsSection: React.FC = () => {
         </Card>
 
         {/* Feedback Form */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 bg-card text-card-foreground">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5" />

@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Member } from '../types';
-import { getMemberById } from '../utils/memberUtils';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import { DashboardHome } from './dashboard/DashboardHome';
 import { EventsSection } from './dashboard/EventsSection';
 import { ProfileSection } from './dashboard/ProfileSection';
@@ -18,14 +18,30 @@ interface DashboardContentProps {
 
 export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const [member, setMember] = useState<Member | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("dashboard");
   const { user, logout } = useAuth();
 
   useEffect(() => {
-    if (user?.memberId) {
-      const memberData = getMemberById(user.memberId);
-      setMember(memberData || null);
-    }
+    const loadMemberData = async () => {
+      if (user?.username) {
+        try {
+          // Get member data from backend API
+          const memberData = await api.get(`/members?username=${user.username}`);
+          if (memberData && memberData.length > 0) {
+            setMember(memberData[0]);
+          }
+        } catch (error) {
+          console.error('Failed to load member data:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    loadMemberData();
   }, [user]);
 
   useEffect(() => {
@@ -38,6 +54,33 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
       window.removeEventListener('sectionChange', handleSectionChange as EventListener);
     };
   }, []);
+
+  const handleMemberUpdate = async (updatedMember: Member) => {
+    // Re-fetch member data from backend to ensure latest info
+    if (user?.username) {
+      try {
+        const memberData = await api.get(`/members?username=${user.username}`);
+        if (memberData && memberData.length > 0) {
+          setMember(memberData[0]);
+        }
+      } catch (error) {
+        console.error('Failed to reload member data:', error);
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Loading...</h2>
+            <p className="text-gray-600">Please wait while we load your information.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!member) {
     return (
@@ -60,7 +103,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
       case 'events':
         return <EventsSection />;
       case 'profile':
-        return <ProfileSection member={member} />;
+        return <ProfileSection member={member} onMemberUpdate={handleMemberUpdate} />;
       case 'settings':
         return <SettingsSection />;
       default:
@@ -69,8 +112,8 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="bg-card shadow-sm border-b text-card-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Member } from '../types';
-import { getMembers, deleteMember } from '../utils/memberUtils';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import { MemberRegistrationForm } from '../components/MemberRegistrationForm';
 import VirtualIdCard from '../components/VirtualIdCard';
 import { EventsManagement } from '../components/EventsManagement';
@@ -23,6 +23,8 @@ const AdminDashboard: React.FC = () => {
   const [editingMember, setEditingMember] = useState<Member | undefined>();
   const [viewingMember, setViewingMember] = useState<Member | undefined>();
   const [managingPointsFor, setManagingPointsFor] = useState<Member | undefined>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { logout } = useAuth();
 
   useEffect(() => {
@@ -39,25 +41,77 @@ const AdminDashboard: React.FC = () => {
     setFilteredMembers(filtered);
   }, [members, searchTerm]);
 
-  const loadMembers = () => {
-    const loadedMembers = getMembers();
-    setMembers(loadedMembers);
+  const loadMembers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get('/members');
+      setMembers(response);
+    } catch (err: any) {
+      console.error('Failed to load members:', err);
+      setError('Failed to load members. Please try again.');
+      toast({
+        title: "Error",
+        description: "Failed to load members from database.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this member?')) {
-      deleteMember(id);
-      loadMembers();
-      toast({
-        title: "Member Deleted",
-        description: "Member has been successfully deleted.",
-      });
+      try {
+        await api.delete(`/members/${id}`);
+        await loadMembers(); // Reload the list
+        toast({
+          title: "Member Deleted",
+          description: "Member has been successfully deleted.",
+        });
+      } catch (err: any) {
+        console.error('Failed to delete member:', err);
+        toast({
+          title: "Error",
+          description: "Failed to delete member. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
   const handleEditSuccess = () => {
     setEditingMember(undefined);
     loadMembers();
+  };
+
+  const handlePointsUpdate = async (memberId: string, pointsChange: number) => {
+    try {
+      // Find the member to get current points
+      const member = members.find(m => m.id === memberId);
+      if (!member) return;
+
+      const newPoints = Math.max(0, (member.points || 0) + pointsChange);
+      
+      // Update member points via API
+      await api.put(`/members/${memberId}`, { points: newPoints });
+      
+      // Reload members to get updated data
+      await loadMembers();
+      
+      setManagingPointsFor(undefined);
+      toast({
+        title: "Points Updated",
+        description: `${pointsChange > 0 ? 'Added' : 'Removed'} ${Math.abs(pointsChange)} points for ${member.firstName} ${member.lastName}`,
+      });
+    } catch (err: any) {
+      console.error('Failed to update points:', err);
+      toast({
+        title: "Error",
+        description: "Failed to update points. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -83,6 +137,26 @@ const AdminDashboard: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {loading && (
+          <div className="text-center py-8">
+            <p className="text-lg text-gray-600">Loading members...</p>
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <p className="text-red-800">{error}</p>
+            <Button 
+              onClick={loadMembers} 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+        
         <Tabs defaultValue="members" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="members" className="flex items-center space-x-2">
@@ -165,7 +239,7 @@ const AdminDashboard: React.FC = () => {
                         <TableHead>Name</TableHead>
                         <TableHead>Username</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Points</TableHead>
+                        <TableHead>Total Points</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
@@ -180,7 +254,7 @@ const AdminDashboard: React.FC = () => {
                           <TableCell>{member.username}</TableCell>
                           <TableCell>{member.email}</TableCell>
                           <TableCell className="font-bold text-blue-600">
-                            {member.adminPoints || 0}
+                            {member.points || 0}
                           </TableCell>
                           <TableCell>
                             <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
@@ -259,10 +333,7 @@ const AdminDashboard: React.FC = () => {
           <div className="relative">
             <AdminPointsManager
               member={managingPointsFor}
-              onUpdate={() => {
-                loadMembers();
-                setManagingPointsFor(undefined);
-              }}
+              onUpdate={(pointsChange) => handlePointsUpdate(managingPointsFor.id, pointsChange)}
             />
             <Button
               variant="outline"

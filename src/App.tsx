@@ -38,9 +38,11 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <AppContent />
+        <div className="min-h-screen bg-white text-black dark:bg-black dark:text-white">
+          <Toaster />
+          <Sonner />
+          <AppContent />
+        </div>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

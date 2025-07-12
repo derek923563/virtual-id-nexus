@@ -1,7 +1,8 @@
 
 export interface User {
-  id: string;
-  email: string;
+  id?: string;
+  email?: string;
+  username?: string;
   role: 'admin' | 'user';
   memberId?: string;
 }
@@ -13,7 +14,8 @@ export interface Member {
   lastName: string;
   username: string;
   email: string;
-  phone: string;
+  countryCode: string;
+  phoneNumber: string;
   experience: string;
   dateOfBirth: string;
   address: string;
@@ -26,7 +28,9 @@ export interface Member {
     missedEvents: number;
     lastActivity: string;
   };
-  adminPoints: number;
+  points: number;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
 }
 
 export interface AuthContextType {
@@ -34,4 +38,5 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   login: (emailOrUsername: string, password: string) => Promise<boolean>;
   logout: () => void;
+  register: (registrationData: any) => Promise<{ success: boolean; error?: string }>;
 }

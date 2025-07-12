@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, IdCard } from 'lucide-react';
+import { AlertCircle, IdCard, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface LoginFormProps {
@@ -12,11 +12,12 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
-  const [emailOrUsername, setEmailOrUsername] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,9 +25,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
     setLoading(true);
 
     try {
-      const success = await login(emailOrUsername, password);
+      const success = await login(username, password);
       if (!success) {
-        setError('Invalid email/username or password');
+        setError('Invalid username or password');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -59,27 +60,37 @@ const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="emailOrUsername">Email or Username</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="emailOrUsername"
+                id="username"
                 type="text"
-                placeholder="Enter your email or username"
-                value={emailOrUsername}
-                onChange={(e) => setEmailOrUsername(e.target.value)}
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
             
             <Button 
@@ -103,14 +114,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
               </Button>
             </div>
           )}
-          
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</p>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p><strong>Admin:</strong> admin@virtualid.com / admin123</p>
-              <p><strong>User:</strong> Any registered member email / user123</p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

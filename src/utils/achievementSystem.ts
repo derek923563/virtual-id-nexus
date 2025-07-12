@@ -54,19 +54,8 @@ export const getLevelInfo = (score: number) => {
 };
 
 export const calculateUserScore = (member: any): UserScore => {
-  let totalPoints = 50; // Base registration points
-  
-  // Profile completion bonus
-  if (member.experience && member.address) {
-    totalPoints += 30;
-  }
-  
-  // Add admin-awarded points
-  totalPoints += member.adminPoints || 0;
-  
-  // Simulate additional points (in real app, this would come from actual activity)
-  const storedPoints = localStorage.getItem(`user_points_${member.id}`) || '0';
-  totalPoints += parseInt(storedPoints);
+  // Use the points directly from the database as total points
+  const totalPoints = member.points || 0;
   
   const { level, title } = getLevelInfo(totalPoints);
   
@@ -82,7 +71,15 @@ export const calculateUserScore = (member: any): UserScore => {
   };
 };
 
-export const addPoints = (memberId: string, points: number) => {
-  const current = parseInt(localStorage.getItem(`user_points_${memberId}`) || '0');
-  localStorage.setItem(`user_points_${memberId}`, (current + points).toString());
+export const addPoints = async (memberId: string, points: number): Promise<void> => {
+  try {
+    // This should call an API endpoint to update points in the database
+    // For now, we'll just log that points should be updated via API
+    console.log(`Points should be updated via API: ${points} points for member ${memberId}`);
+    
+    // TODO: Implement API call to update points
+    // await api.put(`/members/${memberId}`, { points: currentPoints + points });
+  } catch (error) {
+    console.error('Failed to update points:', error);
+  }
 };

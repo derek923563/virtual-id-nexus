@@ -17,14 +17,45 @@ interface DatePickerProps {
   onSelect?: (date: Date | undefined) => void
   selected?: Date
   placeholder?: string
+  minDate?: Date
+  maxDate?: Date
+  disabledDate?: (date: Date) => boolean
+  variant?: 'default' | 'compact'
 }
 
-export function DatePicker({ id, onSelect, selected, placeholder = "Pick a date" }: DatePickerProps) {
+export function DatePicker({ id, onSelect, selected, placeholder = "Pick a date", minDate, maxDate, disabledDate, variant = 'default' }: DatePickerProps) {
   const [date, setDate] = React.useState<Date | undefined>(selected)
 
   const handleSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate)
     onSelect?.(selectedDate)
+  }
+
+  if (variant === 'compact') {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            id={id}
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+          >
+            <CalendarIcon className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={handleSelect}
+            initialFocus
+            className="p-3 pointer-events-auto"
+            disabled={disabledDate}
+          />
+        </PopoverContent>
+      </Popover>
+    )
   }
 
   return (
@@ -49,6 +80,7 @@ export function DatePicker({ id, onSelect, selected, placeholder = "Pick a date"
           onSelect={handleSelect}
           initialFocus
           className="p-3 pointer-events-auto"
+          disabled={disabledDate}
         />
       </PopoverContent>
     </Popover>

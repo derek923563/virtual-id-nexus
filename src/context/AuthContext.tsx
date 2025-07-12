@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthContextType } from '../types';
+import { api } from '../lib/api';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -25,59 +26,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (emailOrUsername: string, password: string): Promise<boolean> => {
-    console.log('Login attempt with:', emailOrUsername);
-    
-    // Admin credentials
-    if (emailOrUsername === 'admin@virtualid.com' && password === 'admin123') {
-      const adminUser: User = {
-        id: 'admin-1',
-        email: 'admin@virtualid.com',
-        role: 'admin'
-      };
-      setUser(adminUser);
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const res = await api.post('/auth/login', { username, password });
+      const userData = { username, role: res.role, user: res.user };
+      setUser(userData);
       setIsAuthenticated(true);
-      localStorage.setItem('currentUser', JSON.stringify(adminUser));
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      localStorage.setItem('token', res.token);
       return true;
+    } catch (err) {
+      return false;
     }
+  };
 
-    // Check for member login by email or username
-    const members = JSON.parse(localStorage.getItem('members') || '[]');
-    console.log('Available members:', members);
-    
-    const member = members.find((m: any) => {
-      const emailMatch = m.email && m.email.toLowerCase() === emailOrUsername.toLowerCase();
-      const usernameMatch = m.username && m.username.toLowerCase() === emailOrUsername.toLowerCase();
-      console.log(`Checking member ${m.email}/${m.username}: email match: ${emailMatch}, username match: ${usernameMatch}`);
-      return emailMatch || usernameMatch;
-    });
-    
-    console.log('Found member:', member);
-    
-    if (member && password === 'user123') {
-      const memberUser: User = {
-        id: member.id,
-        email: member.email,
-        role: 'user',
-        memberId: member.id
-      };
-      setUser(memberUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('currentUser', JSON.stringify(memberUser));
-      return true;
+  const register = async (registrationData: any): Promise<{ success: boolean; error?: string }> => {
+    try {
+      console.log('Attempting to register user:', { username: registrationData.username, email: registrationData.email });
+      const response = await api.post('/auth/register', registrationData);
+      console.log('Registration response:', response);
+      return { success: true };
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      console.error('Error message:', err.message);
+      return { success: false, error: err.message };
     }
-
-    return false;
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, register }}>
       {children}
     </AuthContext.Provider>
   );
