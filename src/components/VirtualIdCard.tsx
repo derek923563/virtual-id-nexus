@@ -73,15 +73,15 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails =
       
       {showFullDetails && (
         <Card className="mt-4 p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Contact Information</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Contact Information</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
               <Mail className="h-4 w-4 text-blue-600" />
               <span className="text-sm">{member.email}</span>
             </div>
             <div className="flex items-center space-x-3">
-              <Phone className="h-4 w-4 text-blue-600" />
-              <span className="text-sm">{member.phone}</span>
+              <Phone className="h-4 w-4 text-gray-500" />
+              <span>{member.countryCode} {member.phoneNumber}</span>
             </div>
             <div className="flex items-center space-x-3">
               <MapPin className="h-4 w-4 text-blue-600" />

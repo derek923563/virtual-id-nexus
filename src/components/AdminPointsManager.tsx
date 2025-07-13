@@ -35,7 +35,7 @@ export const AdminPointsManager: React.FC<AdminPointsManagerProps> = ({ member, 
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-center">
-          <p className="text-sm text-gray-600">Current Total Points</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Current Total Points</p>
           <p className="text-2xl font-bold text-blue-600">{member.points || 0}</p>
         </div>
         

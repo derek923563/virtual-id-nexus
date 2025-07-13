@@ -5,6 +5,13 @@ export interface User {
   username?: string;
   role: 'admin' | 'user';
   memberId?: string;
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+    themePreference?: 'light' | 'dark' | 'system';
+    [key: string]: any;
+  };
 }
 
 export interface Member {
@@ -23,6 +30,7 @@ export interface Member {
   status: 'active' | 'inactive';
   password: string;
   confirmPassword: string;
+  themePreference?: 'light' | 'dark' | 'system';
   eventParticipation: {
     registeredEvents: string[];
     missedEvents: number;
@@ -39,4 +47,5 @@ export interface AuthContextType {
   login: (emailOrUsername: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (registrationData: any) => Promise<{ success: boolean; error?: string }>;
+  updateThemePreference: (themePreference: 'light' | 'dark' | 'system') => Promise<boolean>;
 }

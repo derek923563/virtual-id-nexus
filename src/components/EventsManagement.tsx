@@ -78,7 +78,7 @@ export const EventsManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Events Management</h2>
-          <p className="text-gray-600">Manage events and point allocations</p>
+          <p className="text-gray-600 dark:text-gray-300">Manage events and point allocations</p>
         </div>
         <Button onClick={() => setShowForm(true)} className="flex items-center space-x-2">
           <Plus className="h-4 w-4" />
@@ -92,7 +92,7 @@ export const EventsManagement: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2 mb-6">
-            <Search className="h-4 w-4 text-gray-400" />
+            <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               placeholder="Search events by name or description..."
               value={searchTerm}
@@ -115,7 +115,7 @@ export const EventsManagement: React.FC = () => {
               <TableBody>
                 {filteredEvents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-gray-500 py-8">
+                    <TableCell colSpan={5} className="text-center text-gray-500 dark:text-gray-400 py-8">
                       No events found. Create your first event to get started.
                     </TableCell>
                   </TableRow>

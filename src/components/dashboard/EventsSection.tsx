@@ -28,7 +28,7 @@ export const EventsSection: React.FC = () => {
             {event.points} points
           </Badge>
         </div>
-        <div className="space-y-2 text-sm text-gray-600">
+        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
           <p>{event.description}</p>
           <div className="flex items-center space-x-2">
             <Calendar className="h-4 w-4" />
@@ -42,8 +42,8 @@ export const EventsSection: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Events</h1>
-        <p className="text-gray-600">Stay updated with all your events</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Events</h1>
+        <p className="text-gray-600 dark:text-gray-300">Stay updated with all your events</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -57,7 +57,7 @@ export const EventsSection: React.FC = () => {
               {currentEvents.length > 0 ? (
                 currentEvents.map(event => <EventCard key={event.id} event={event} />)
               ) : (
-                <p className="text-gray-500 text-center py-4">No current events</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4">No current events</p>
               )}
             </CardContent>
           </Card>
@@ -73,7 +73,7 @@ export const EventsSection: React.FC = () => {
               {upcomingEvents.length > 0 ? (
                 upcomingEvents.map(event => <EventCard key={event.id} event={event} />)
               ) : (
-                <p className="text-gray-500 text-center py-4">No upcoming events</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4">No upcoming events</p>
               )}
             </CardContent>
           </Card>
@@ -83,10 +83,10 @@ export const EventsSection: React.FC = () => {
         <div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-gray-600">Past Events</CardTitle>
+              <CardTitle className="text-gray-600 dark:text-gray-300">Past Events</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 text-center py-4">No past events</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-4">No past events</p>
             </CardContent>
           </Card>
         </div>

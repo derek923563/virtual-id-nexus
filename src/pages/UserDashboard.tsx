@@ -7,7 +7,7 @@ const UserDashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex w-full relative">
+    <div className="min-h-screen flex w-full relative bg-background text-foreground">
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div 
@@ -18,7 +18,7 @@ const UserDashboard: React.FC = () => {
       
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card shadow-lg transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${sidebarOpen ? 'lg:w-64' : 'lg:w-0 lg:overflow-hidden'}
       `}>
@@ -26,7 +26,7 @@ const UserDashboard: React.FC = () => {
       </div>
       
       {/* Main content */}
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 bg-background">
         <DashboardContent sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       </main>
     </div>

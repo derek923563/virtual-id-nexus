@@ -84,7 +84,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
                 />
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
                   onClick={() => setShowPassword((v) => !v)}
                   tabIndex={-1}
                 >
@@ -104,7 +104,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onRegisterClick }) => {
           
           {onRegisterClick && (
             <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600 mb-2">Don't have an account?</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Don't have an account?</p>
               <Button 
                 variant="outline" 
                 onClick={onRegisterClick}

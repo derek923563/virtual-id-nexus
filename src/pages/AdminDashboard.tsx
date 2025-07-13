@@ -124,8 +124,8 @@ const AdminDashboard: React.FC = () => {
                 <Users className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-gray-600">Virtual ID Management System</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+                <p className="text-gray-600 dark:text-gray-300">Virtual ID Management System</p>
               </div>
             </div>
             <Button onClick={logout} variant="outline" className="flex items-center space-x-2">
@@ -139,7 +139,7 @@ const AdminDashboard: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading && (
           <div className="text-center py-8">
-            <p className="text-lg text-gray-600">Loading members...</p>
+            <p className="text-lg text-gray-600 dark:text-gray-300">Loading members...</p>
           </div>
         )}
         
@@ -175,7 +175,7 @@ const AdminDashboard: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Members</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Members</p>
                       <p className="text-3xl font-bold text-blue-600">{members.length}</p>
                     </div>
                     <Users className="h-8 w-8 text-blue-600" />
@@ -187,7 +187,7 @@ const AdminDashboard: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Active Members</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Active Members</p>
                       <p className="text-3xl font-bold text-green-600">
                         {members.filter(m => m.status === 'active').length}
                       </p>
@@ -203,7 +203,7 @@ const AdminDashboard: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Inactive Members</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Inactive Members</p>
                       <p className="text-3xl font-bold text-red-600">
                         {members.filter(m => m.status === 'inactive').length}
                       </p>
@@ -222,7 +222,7 @@ const AdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2 mb-6">
-                  <Search className="h-4 w-4 text-gray-400" />
+                  <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                   <Input
                     placeholder="Search members by name, email, or ID..."
                     value={searchTerm}

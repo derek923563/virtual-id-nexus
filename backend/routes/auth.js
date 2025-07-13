@@ -22,16 +22,22 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'All required fields must be provided' });
     }
 
-    // Check for existing user
-    const existingUser = await Member.findOne({ 
-      $or: [{ username }, { email }] 
-    });
-    
-    if (existingUser) {
-      console.log('User already exists:', { username, email });
-      return res.status(400).json({ 
-        message: existingUser.username === username ? 'Username already in use' : 'Email already in use' 
-      });
+    // Check for existing username
+    const existingUsername = await Member.findOne({ username });
+    if (existingUsername) {
+      return res.status(400).json({ message: 'Username already in use', field: 'username' });
+    }
+
+    // Check for existing email
+    const existingEmail = await Member.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({ message: 'Email already in use', field: 'email' });
+    }
+
+    // Check for existing phone number with country code
+    const existingPhone = await Member.findOne({ countryCode, phoneNumber });
+    if (existingPhone) {
+      return res.status(400).json({ message: 'Phone number already in use', field: 'phoneNumber' });
     }
 
     // Create new user
@@ -154,12 +160,12 @@ router.post('/verify-otp', async (req, res) => {
       const user = await Member.findById(userId);
       if (!user) {
         console.log('User not found for ID:', userId);
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
       
       // Check if already verified
       if ((type === 'email' && user.emailVerified) || (type === 'phone' && user.phoneVerified)) {
-        return res.status(400).json({ message: `${type.charAt(0).toUpperCase() + type.slice(1)} already verified` });
+        return res.status(400).json({ success: false, message: `${type.charAt(0).toUpperCase() + type.slice(1)} already verified` });
       }
       
       // Set verified flag and award points
@@ -174,7 +180,8 @@ router.post('/verify-otp', async (req, res) => {
         id: user._id.toString()
       };
       
-      res.json({ 
+      return res.json({ 
+        success: true,
         message: `${type} verified successfully`, 
         pointsAwarded: 10,
         newTotalPoints: user.points,
@@ -182,11 +189,11 @@ router.post('/verify-otp', async (req, res) => {
       });
     } else {
       console.log('Invalid OTP provided:', otp);
-      res.status(400).json({ message: 'Invalid OTP' });
+      return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
   } catch (err) {
     console.error('OTP verification error:', err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -218,6 +225,43 @@ router.put('/change-password', async (req, res) => {
     console.log('Password updated for user:', user.username, 'New hash:', user.password);
     res.json({ message: 'Password updated successfully.' });
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Update theme preference
+router.put('/theme-preference', async (req, res) => {
+  try {
+    const { userId, themePreference } = req.body;
+    
+    if (!userId || !themePreference) {
+      return res.status(400).json({ message: 'User ID and theme preference are required' });
+    }
+    
+    if (!['light', 'dark', 'system'].includes(themePreference)) {
+      return res.status(400).json({ message: 'Invalid theme preference' });
+    }
+    
+    const user = await Member.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    user.themePreference = themePreference;
+    await user.save();
+    
+    // Transform MongoDB document to include id field
+    const userWithId = {
+      ...user.toObject(),
+      id: user._id.toString()
+    };
+    
+    res.json({ 
+      message: 'Theme preference updated successfully',
+      user: userWithId
+    });
+  } catch (err) {
+    console.error('Theme preference update error:', err);
     res.status(500).json({ message: err.message });
   }
 });

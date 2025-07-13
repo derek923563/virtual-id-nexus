@@ -2,6 +2,7 @@
 import React from 'react';
 import { Home, Calendar, User, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const menuItems = [
   {
@@ -44,9 +45,11 @@ export function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarProps) {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b flex items-center justify-between">
+    <div className="h-full flex flex-col bg-card text-card-foreground">
+      <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="text-lg font-semibold">Member Portal</h2>
+        <div className="flex items-center space-x-2">
+          <ThemeToggle />
         <Button
           variant="ghost"
           size="icon"
@@ -55,6 +58,7 @@ export function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarProps) {
         >
           <X className="h-4 w-4" />
         </Button>
+        </div>
       </div>
       
       <div className="flex-1 p-4">
@@ -66,8 +70,8 @@ export function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarProps) {
               className={`
                 w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors
                 ${activeSection === item.id 
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-primary/10 text-primary border border-primary/20' 
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }
               `}
             >

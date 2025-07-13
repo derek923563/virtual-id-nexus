@@ -25,6 +25,17 @@ const generateUniqueId = () => {
   return 'M-' + Math.random().toString(36).substring(2, 9).toUpperCase();
 };
 
+// Type guard for backend error object
+function isFieldError(error: unknown): error is { field: string; message: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'field' in error &&
+    typeof (error as any).field === 'string' &&
+    typeof (error as any).message === 'string'
+  );
+}
+
 export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ member, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -84,7 +95,7 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
     if (!formData.lastName.trim()) {
       errors.lastName = 'Last name is required';
     }
-    if (!formData.username.trim()) {
+     if (!formData.username.trim()) {
       errors.username = 'Username is required';
     }
     if (!formData.email.trim()) {
@@ -146,72 +157,85 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
 
     const result = await register(memberData);
     if (result.success) {
-      toast({
-        title: member ? "Member Updated" : "Member Created",
-        description: `Member "${memberData.firstName} ${memberData.lastName}" has been ${member ? 'updated' : 'created'} successfully.`,
-      });
-      onSuccess();
+    toast({
+      title: member ? "Member Updated" : "Member Created",
+      description: `Member "${memberData.firstName} ${memberData.lastName}" has been ${member ? 'updated' : 'created'} successfully.`,
+    });
+    onSuccess();
     } else {
-      toast({
-        title: "Registration Failed",
-        description: result.error || "Could not register member. Please try again.",
-        variant: "destructive"
-      });
+      // Show specific field error if provided by backend
+      if (isFieldError(result.error)) {
+        const err = result.error as { field: string; message: string };
+        setFormErrors({ ...errors, [err.field]: err.message });
+      } else {
+        let errorMessage = "Could not register member. Please try again.";
+        if (typeof result.error === 'string') {
+          errorMessage = result.error;
+        } else if (isFieldError(result.error)) {
+          const err = result.error as { field: string; message: string };
+          errorMessage = err.message;
+        }
+        toast({
+          title: "Registration Failed",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
       <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>{member ? 'Edit Member' : 'Register New Member'}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  placeholder="Enter first name"
-                  required
-                />
-                {formErrors.firstName && <p className="text-red-500 text-sm">{formErrors.firstName}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  placeholder="Enter last name"
-                  required
-                />
-                {formErrors.lastName && <p className="text-red-500 text-sm">{formErrors.lastName}</p>}
-              </div>
+      <CardHeader>
+        <CardTitle>{member ? 'Edit Member' : 'Register New Member'}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                placeholder="Enter first name"
+                required
+              />
+              {formErrors.firstName && <p className="text-red-500 text-sm">{formErrors.firstName}</p>}
             </div>
-            
-             <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="Enter username"
-                  required
-                />
-                {formErrors.username && <p className="text-red-500 text-sm">{formErrors.username}</p>}
-              </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="lastName">Last Name</Label>
               <Input
-                id="email"
-                type="email"
-                value={formData.email}
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                placeholder="Enter last name"
+                required
+              />
+              {formErrors.lastName && <p className="text-red-500 text-sm">{formErrors.lastName}</p>}
+            </div>
+          </div>
+          
+           <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                placeholder="Enter username"
+                required
+              />
+              {formErrors.username && <p className="text-red-500 text-sm">{formErrors.username}</p>}
+            </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
                 onChange={(e) => {
                   setFormData({ ...formData, email: e.target.value });
                   const val = e.target.value;
@@ -219,14 +243,14 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) setEmailError('Invalid email format');
                   else setEmailError('');
                 }}
-                placeholder="Enter email address"
-                required
-              />
+              placeholder="Enter email address"
+              required
+            />
               {(formErrors.email || emailError) && <p className="text-red-500 text-sm">{formErrors.email || emailError}</p>}
-            </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger className="w-[120px]">
@@ -254,9 +278,9 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                     <SelectItem value="+94">+94 Sri Lanka</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input
-                  id="phone"
-                  type="tel"
+            <Input
+              id="phone"
+              type="tel"
                   value={phoneNumber}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -264,14 +288,14 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                   }}
                   placeholder="Enter 10-digit phone number"
                   maxLength={10}
-                  required
-                />
+              required
+            />
               </div>
               {(formErrors.phoneNumber || formErrors.countryCode) && <p className="text-red-500 text-sm">{formErrors.phoneNumber || formErrors.countryCode}</p>}
-            </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="experience">Experience</Label>
+          <div className="space-y-2">
+            <Label htmlFor="experience">Experience</Label>
               <Select onValueChange={(value) => setFormData({ ...formData, experience: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select experience" defaultValue={formData.experience} />
@@ -285,10 +309,10 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                   <SelectItem value="5+ years">5+ years</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+          <div className="space-y-2">
+            <Label htmlFor="dateOfBirth">Date of Birth</Label>
               <div className="relative">
                 <Input
                   id="dateOfBirth"
@@ -323,19 +347,19 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                   className="pr-12"
                 />
                 <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                  <DatePicker
+            <DatePicker
                     variant="compact"
-                    onSelect={(date) => {
-                      if (date) {
+              onSelect={(date) => {
+                if (date) {
                         const today = new Date();
                         const age = differenceInYears(today, date);
                         if (age < 10) {
                           setFormErrors(f => ({ ...f, dateOfBirth: 'You must be at least 10 years old.' }));
                         } else {
                           setFormErrors(f => { const { dateOfBirth, ...rest } = f; return rest; });
-                          const formattedDate = format(date, 'yyyy-MM-dd');
-                          setFormData({ ...formData, dateOfBirth: formattedDate });
-                        }
+                  const formattedDate = format(date, 'yyyy-MM-dd');
+                  setFormData({ ...formData, dateOfBirth: formattedDate });
+                }
                       }
                     }}
                     disabledDate={date => {
@@ -343,34 +367,34 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                       const today = new Date();
                       const minDate = subYears(today, 10);
                       return isAfter(date, minDate) || isAfter(date, today);
-                    }}
-                  />
+              }}
+            />
                 </div>
               </div>
-              {formData.dateOfBirth && (
-                <p className="text-gray-500 text-sm mt-1">
-                  Selected Date: {formData.dateOfBirth}
-                </p>
-              )}
-              <p className="text-gray-500 text-sm mt-1">
+            {formData.dateOfBirth && (
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                Selected Date: {formData.dateOfBirth}
+              </p>
+            )}
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                 💡 You can type the date (YYYY-MM-DD) or click the calendar icon to select from the calendar
               </p>
               {formErrors.dateOfBirth && <p className="text-red-500 text-sm">{formErrors.dateOfBirth}</p>}
-            </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Enter address"
-                required
-              />
-              {formErrors.address && <p className="text-red-500 text-sm">{formErrors.address}</p>}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Enter address"
+              required
+            />
+            {formErrors.address && <p className="text-red-500 text-sm">{formErrors.address}</p>}
+          </div>
 
-            <div className="space-y-2">
+          <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
@@ -387,7 +411,7 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                 />
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
                   onClick={() => setShowPassword(v => !v)}
                   tabIndex={-1}
                 >
@@ -412,7 +436,7 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                 />
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
                   onClick={() => setShowConfirmPassword(v => !v)}
                   tabIndex={-1}
                 >
@@ -420,19 +444,19 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                 </button>
               </div>
               {confirmPasswordError && <p className="text-red-500 text-sm">{confirmPasswordError}</p>}
-            </div>
+          </div>
 
-            <div className="flex space-x-2">
-              <Button type="submit" className="flex-1">
-                {member ? 'Update Member' : 'Register Member'}
-              </Button>
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          <div className="flex space-x-2">
+            <Button type="submit" className="flex-1">
+              {member ? 'Update Member' : 'Register Member'}
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
     </div>
   );
 };

@@ -53,6 +53,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateThemePreference = async (themePreference: 'light' | 'dark' | 'system'): Promise<boolean> => {
+    try {
+      if (!user?.user?.id) {
+        console.error('No user ID available for theme preference update');
+        return false;
+      }
+
+      const response = await api.put('/auth/theme-preference', {
+        userId: user.user.id,
+        themePreference
+      });
+
+      // Update the user data with the new theme preference
+      if (user.user) {
+        user.user.themePreference = themePreference;
+        setUser({ ...user });
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Failed to update theme preference:', err);
+      return false;
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
@@ -61,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, register }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, register, updateThemePreference }}>
       {children}
     </AuthContext.Provider>
   );

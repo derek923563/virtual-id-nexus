@@ -161,16 +161,25 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
           type: 'email',
           otp: emailOtp
         });
+        console.log('OTP verify response:', response);
+        if ((response.status === 200 || response.status === 201) && response.data && response.data.success === true) {
       setEmailVerified(true);
-        setEmailOtp('');
-        setShowEmailOtpInput(false);
-        setEmailOtpSent(false);
-        toast({
-          title: "Email Verified!",
-          description: `Email verified successfully! +${response.data.pointsAwarded} points earned!`,
-        });
-        if (onMemberUpdate) {
-          onMemberUpdate({ ...member, ...response.data.user });
+          setEmailOtp('');
+          setShowEmailOtpInput(false);
+          setEmailOtpSent(false);
+          toast({
+            title: "Email Verified!",
+            description: `Email verified successfully! +${response.data.pointsAwarded} points earned!`,
+          });
+          if (onMemberUpdate) {
+            onMemberUpdate({ ...member, ...response.data.user });
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: response.data?.message || "Failed to verify email. Please try again.",
+            variant: "destructive"
+          });
         }
       } catch (error: any) {
         console.error('OTP verification error:', error);
@@ -197,16 +206,25 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
           type: 'phone',
           otp: phoneOtp
         });
+        console.log('OTP verify response:', response);
+        if ((response.status === 200 || response.status === 201) && response.data && response.data.success === true) {
       setPhoneVerified(true);
-        setPhoneOtp('');
-        setShowPhoneOtpInput(false);
-        setPhoneOtpSent(false);
-        toast({
-          title: "Phone Verified!",
-          description: `Phone number verified successfully! +${response.data.pointsAwarded} points earned!`,
-        });
-        if (onMemberUpdate) {
-          onMemberUpdate({ ...member, ...response.data.user });
+          setPhoneOtp('');
+          setShowPhoneOtpInput(false);
+          setPhoneOtpSent(false);
+          toast({
+            title: "Phone Verified!",
+            description: `Phone number verified successfully! +${response.data.pointsAwarded} points earned!`,
+          });
+          if (onMemberUpdate) {
+            onMemberUpdate({ ...member, ...response.data.user });
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: response.data?.message || "Failed to verify phone. Please try again.",
+            variant: "destructive"
+          });
         }
       } catch (error: any) {
         console.error('OTP verification error:', error);
@@ -295,8 +313,8 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile</h1>
-        <p className="text-gray-600">Update your profile information. Verify your email and phone to earn bonus points!</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Profile</h1>
+        <p className="text-gray-600 dark:text-gray-300">Update your profile information. Verify your email and phone to earn bonus points!</p>
       </div>
 
       <Card>
@@ -311,48 +329,48 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
             {/* Non-editable fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">First Name</Label>
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">First Name</Label>
                 <Input
                   value={member.firstName}
                   disabled
-                  className="bg-gray-100 text-gray-500 cursor-not-allowed"
+                  className="bg-gray-100 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Last Name</Label>
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</Label>
                 <Input
                   value={member.lastName}
                   disabled
-                  className="bg-gray-100 text-gray-500 cursor-not-allowed"
+                  className="bg-gray-100 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400"
                 />
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Member ID</Label>
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Member ID</Label>
                 <Input
                   value={member.uniqueId}
                   disabled
-                  className="bg-gray-100 text-gray-500 cursor-not-allowed font-mono"
+                  className="bg-gray-100 text-gray-500 cursor-not-allowed font-mono dark:bg-gray-800 dark:text-gray-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Date of Birth</Label>
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</Label>
                 <Input
                   value={new Date(member.dateOfBirth).toLocaleDateString()}
                   disabled
-                  className="bg-gray-100 text-gray-500 cursor-not-allowed"
+                  className="bg-gray-100 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Join Date</Label>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Join Date</Label>
               <Input
                 value={new Date(member.joinDate).toLocaleDateString()}
                 disabled
-                className="bg-gray-100 text-gray-500 cursor-not-allowed"
+                className="bg-gray-100 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400"
               />
             </div>
 
@@ -360,7 +378,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
             <div className="border-t pt-6 space-y-6">
               
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium text-gray-700">Username</Label>
+                <Label htmlFor="username" className="text-sm font-medium text-gray-700 dark:text-gray-300">Username</Label>
                 <div className="relative">
                 <Input
                   id="username"
@@ -390,7 +408,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
+                <Label htmlFor="experience" className="text-sm font-medium text-gray-700 dark:text-gray-300">Experience Level</Label>
                 <Select 
                   value={formData.experience} 
                   onValueChange={(value) => setFormData({...formData, experience: value})}
@@ -410,7 +428,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
 
               {/* Email with OTP verification */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -463,7 +481,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
 
               {/* Phone with OTP verification */}
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone Number</Label>
+                <Label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number</Label>
                 <div className="flex gap-2">
                   <Select value={countryCode} onValueChange={setCountryCode} disabled={phoneVerified}>
                     <SelectTrigger className="w-[120px]">
@@ -531,7 +549,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address" className="text-sm font-medium text-gray-700">Address</Label>
+                <Label htmlFor="address" className="text-sm font-medium text-gray-700 dark:text-gray-300">Address</Label>
                 <Input
                   id="address"
                   value={formData.address}

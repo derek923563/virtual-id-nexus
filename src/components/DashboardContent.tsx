@@ -71,11 +71,11 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold mb-2">Loading...</h2>
-            <p className="text-gray-600">Please wait while we load your information.</p>
+            <p className="text-muted-foreground">Please wait while we load your information.</p>
           </CardContent>
         </Card>
       </div>
@@ -88,7 +88,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold mb-2">Member Not Found</h2>
-            <p className="text-gray-600 mb-4">Unable to load your member information.</p>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">Unable to load your member information.</p>
             <Button onClick={logout}>Return to Login</Button>
           </CardContent>
         </Card>
@@ -126,8 +126,8 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
                 <Menu className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Welcome, {member.firstName}</h1>
-                <p className="text-gray-600">Member ID: {member.uniqueId}</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome, {member.firstName}</h1>
+                <p className="text-gray-600 dark:text-gray-300">Member ID: {member.uniqueId}</p>
               </div>
             </div>
             <Button onClick={logout} variant="outline" className="flex items-center space-x-2">

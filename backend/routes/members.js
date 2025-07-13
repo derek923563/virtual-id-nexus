@@ -1,4 +1,5 @@
 import express from 'express';
+import bcrypt from 'bcryptjs';
 import Member from '../models/User.js';
 
 const router = express.Router();
@@ -49,26 +50,56 @@ router.get('/:id', async (req, res) => {
 
 // Create member
 router.post('/', async (req, res) => {
-  const member = new Member(req.body);
-  await member.save();
-  // Transform MongoDB document to include id field
-  const memberWithId = {
-    ...member.toObject(),
-    id: member._id.toString()
-  };
-  res.status(201).json(memberWithId);
+  try {
+    const memberData = { ...req.body };
+    
+    // Hash password if provided
+    if (memberData.password) {
+      memberData.password = await bcrypt.hash(memberData.password, 10);
+    }
+    
+    // Remove confirmPassword from being saved
+    delete memberData.confirmPassword;
+    
+    const member = new Member(memberData);
+    await member.save();
+    
+    // Transform MongoDB document to include id field
+    const memberWithId = {
+      ...member.toObject(),
+      id: member._id.toString()
+    };
+    res.status(201).json(memberWithId);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 // Update member
 router.put('/:id', async (req, res) => {
-  const member = await Member.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  if (!member) return res.status(404).json({ message: 'Not found' });
-  // Transform MongoDB document to include id field
-  const memberWithId = {
-    ...member.toObject(),
-    id: member._id.toString()
-  };
-  res.json(memberWithId);
+  try {
+    const updateData = { ...req.body };
+    
+    // Hash password if provided
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
+    
+    // Remove confirmPassword from being saved
+    delete updateData.confirmPassword;
+    
+    const member = await Member.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!member) return res.status(404).json({ message: 'Not found' });
+    
+    // Transform MongoDB document to include id field
+    const memberWithId = {
+      ...member.toObject(),
+      id: member._id.toString()
+    };
+    res.json(memberWithId);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 // Delete member

@@ -22,10 +22,10 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Welcome back, {member.firstName}!
         </h1>
-        <p className="text-gray-600">Here's your member dashboard</p>
+        <p className="text-gray-600 dark:text-gray-300">Here's your member dashboard</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -46,7 +46,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
             <CardContent>
               <div className="text-center space-y-4">
                 <div className="text-4xl font-bold text-blue-600">{userScore.totalPoints}</div>
-                <div className="text-sm text-gray-600">out of {maxScore}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">out of {maxScore}</div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
@@ -70,23 +70,23 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Status</span>
+                <span className="text-gray-600 dark:text-gray-300">Status</span>
                 <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
                   {member.status}
                 </Badge>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Experience</span>
+                <span className="text-gray-600 dark:text-gray-300">Experience</span>
                 <span className="font-medium">{member.experience}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Member Since</span>
+                <span className="text-gray-600 dark:text-gray-300">Member Since</span>
                 <span className="font-medium">
                   {new Date(member.joinDate).toLocaleDateString()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Achievements</span>
+                <span className="text-gray-600 dark:text-gray-300">Achievements</span>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="h-4 w-4 text-green-500" />
                   <span className="font-medium">{userScore.achievements.length}</span>

@@ -34,8 +34,8 @@ const Registration: React.FC<RegistrationProps> = ({ onBackToLogin }) => {
               <UserPlus className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Member Registration</h1>
-          <p className="text-gray-600">Create your virtual ID card account</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Member Registration</h1>
+          <p className="text-gray-600 dark:text-gray-300">Create your virtual ID card account</p>
         </div>
 
         <MemberRegistrationForm

@@ -11,13 +11,14 @@ import { Settings, Moon, Sun, Lock, Globe, MessageSquare, Eye, EyeOff, Palette }
 import { themes, getTheme, setTheme, isThemeUnlocked } from '../../utils/themeSystem';
 import { calculateUserScore } from '../../utils/achievementSystem';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../hooks/useTheme';
 import { api } from '../../lib/api';
 
 export const SettingsSection: React.FC = () => {
   const { user } = useAuth();
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('darkMode') === 'true' || false;
-  });
+  const { theme, setTheme: setAppTheme } = useTheme();
+  const { updateThemePreference } = useAuth();
+  const isDarkMode = theme === 'dark';
   
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('language') || 'en';
@@ -58,15 +59,18 @@ export const SettingsSection: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
-  // Apply dark mode instantly and persistently
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+  // Handle dark mode toggle
+  const handleDarkModeToggle = async (checked: boolean) => {
+    const newTheme = checked ? 'dark' : 'light';
+    setAppTheme(newTheme);
+    if (updateThemePreference) {
+      await updateThemePreference(newTheme);
     }
-    localStorage.setItem('darkMode', darkMode.toString());
-  }, [darkMode]);
+    toast({
+      title: "Theme Updated",
+      description: `Switched to ${newTheme} mode`,
+    });
+  };
 
   // Password criteria validation
   function validatePassword(pw: string) {
@@ -90,11 +94,16 @@ export const SettingsSection: React.FC = () => {
 
   // Save language preference
   useEffect(() => {
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage !== language) {
     localStorage.setItem('language', language);
+      if (savedLanguage !== null) { // Only show toast if not initial load
     toast({
       title: "Language Updated",
       description: `Language changed to ${getLanguageName(language)}`,
     });
+      }
+    }
   }, [language]);
 
   const getLanguageName = (code: string) => {
@@ -144,15 +153,15 @@ export const SettingsSection: React.FC = () => {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      toast({
-        title: "Password Changed",
+    toast({
+      title: "Password Changed",
         description: res.message || "Your password has been successfully updated.",
-      });
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
+    });
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
     } catch (err: any) {
       toast({
         title: "Error",
@@ -199,13 +208,13 @@ export const SettingsSection: React.FC = () => {
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                {darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                {isDarkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                 <Label htmlFor="dark-mode">Dark Mode</Label>
               </div>
               <Switch
                 id="dark-mode"
-                checked={darkMode}
-                onCheckedChange={setDarkMode}
+                checked={isDarkMode}
+                onCheckedChange={handleDarkModeToggle}
               />
             </div>
 
@@ -264,7 +273,7 @@ export const SettingsSection: React.FC = () => {
                 ))}
               </div>
               {!themesUnlocked && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   Current score: {userScore.totalPoints}/100 points
                 </p>
               )}
@@ -299,9 +308,9 @@ export const SettingsSection: React.FC = () => {
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 >
                   {showCurrentPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   )}
                 </Button>
               </div>
@@ -325,9 +334,9 @@ export const SettingsSection: React.FC = () => {
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
                   {showNewPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   )}
                 </Button>
               </div>
@@ -352,9 +361,9 @@ export const SettingsSection: React.FC = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   )}
                 </Button>
               </div>
