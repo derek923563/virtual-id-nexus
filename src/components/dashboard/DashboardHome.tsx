@@ -31,7 +31,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* ID Card - Center */}
         <div className="lg:col-span-2 flex justify-center">
-          <VirtualIdCard member={member} />
+          <VirtualIdCard member={member} enableSharing={true} />
         </div>
 
         {/* Score and Stats */}

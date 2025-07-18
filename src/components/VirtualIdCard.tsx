@@ -7,15 +7,21 @@ import { AchievementBadge } from './AchievementBadge';
 import { Calendar, Mail, Phone, MapPin, Briefcase, Trophy } from 'lucide-react';
 import { getTheme } from '../utils/themeSystem';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { getLevelInfo } from '../../shared/achievements.js';
+import { SocialShareButton } from './SocialShareButton';
 
 interface VirtualIdCardProps {
   member: Member;
   showFullDetails?: boolean;
+  enableSharing?: boolean;
 }
 
-const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails = false }) => {
+const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ 
+  member, 
+  showFullDetails = false, 
+  enableSharing = false 
+}) => {
   // Use achievements directly from the backend response
   let userAchievements = member.achievements || [];
   const theme = getTheme();
@@ -23,69 +29,79 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails =
   userAchievements = [...userAchievements].sort((a, b) => (b.points || 0) - (a.points || 0));
   const [open, setOpen] = useState(false);
   const levelInfo = getLevelInfo(member.points || 0);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="max-w-md mx-auto">
-      <Card className={`p-6 ${theme.gradient} text-white relative overflow-hidden`}>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-        
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-bold">Virtual ID Card</h3>
-              <p className="text-blue-200 text-sm">ID: {member.uniqueId}</p>
-            </div>
-            {/* Status badge removed for user side */}
-          </div>
+      <div ref={cardRef}>
+        <Card className={`p-6 ${theme.gradient} text-white relative overflow-hidden`}>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
           
-          <div className="text-center mb-4">
-            <div className="w-20 h-20 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
-              {member.firstName[0]}{member.lastName[0]}
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold">Virtual ID Card</h3>
+                <p className="text-blue-200 text-sm">ID: {member.uniqueId}</p>
+              </div>
+              {/* Status badge removed for user side */}
             </div>
-            <h2 className="text-xl font-bold">{member.firstName} {member.lastName}</h2>
-            <div className="flex items-center justify-center space-x-2 mt-2">
-              <Trophy className="h-4 w-4 text-yellow-300" />
-              <span className="text-sm font-semibold">{levelInfo.title}</span>
-            </div>
-          </div>
-
-          {/* Achievement Badges */}
-          {userAchievements.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold mb-2 text-center">Achievements</h4>
-              <div className="flex flex-wrap gap-1 justify-center">
-                {userAchievements.slice(0, 3).map((achievement) => (
-                  <AchievementBadge key={achievement._id || achievement.id} achievement={achievement} size="sm" />
-                ))}
-                {userAchievements.length > 3 && (
-                  <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                      <Badge
-                        variant="secondary"
-                        className="text-xs px-2 py-1 bg-white/20 text-white cursor-pointer"
-                        onClick={() => setOpen(true)}
-                      >
-                        +{userAchievements.length - 3} more
-                      </Badge>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>All Achievements</DialogTitle>
-                      </DialogHeader>
-                      <div className="flex flex-wrap gap-2 justify-center mt-2">
-                        {userAchievements.map((achievement) => (
-                          <AchievementBadge key={achievement._id || achievement.id} achievement={achievement} size="md" />
-                        ))}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
+            
+            <div className="text-center mb-4">
+              <div className="w-20 h-20 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
+                {member.firstName[0]}{member.lastName[0]}
+              </div>
+              <h2 className="text-xl font-bold">{member.firstName} {member.lastName}</h2>
+              <div className="flex items-center justify-center space-x-2 mt-2">
+                <Trophy className="h-4 w-4 text-yellow-300" />
+                <span className="text-sm font-semibold">{levelInfo.title}</span>
               </div>
             </div>
-          )}
-        </div>
-      </Card>
+
+            {/* Achievement Badges */}
+            {userAchievements.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold mb-2 text-center">Achievements</h4>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {userAchievements.slice(0, 3).map((achievement) => (
+                    <AchievementBadge key={achievement._id || achievement.id} achievement={achievement} size="sm" />
+                  ))}
+                  {userAchievements.length > 3 && (
+                    <Dialog open={open} onOpenChange={setOpen}>
+                      <DialogTrigger asChild>
+                        <Badge
+                          variant="secondary"
+                          className="text-xs px-2 py-1 bg-white/20 text-white cursor-pointer"
+                          onClick={() => setOpen(true)}
+                        >
+                          +{userAchievements.length - 3} more
+                        </Badge>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>All Achievements</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-wrap gap-2 justify-center mt-2">
+                          {userAchievements.map((achievement) => (
+                            <AchievementBadge key={achievement._id || achievement.id} achievement={achievement} size="md" />
+                          ))}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+      
+      {enableSharing && (
+        <SocialShareButton 
+          cardRef={cardRef} 
+          memberName={`${member.firstName} ${member.lastName}`}
+        />
+      )}
       
       {showFullDetails && (
         <Card className="mt-4 p-6">
