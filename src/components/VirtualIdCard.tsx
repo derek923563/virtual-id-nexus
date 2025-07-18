@@ -15,12 +15,14 @@ interface VirtualIdCardProps {
   member: Member;
   showFullDetails?: boolean;
   enableSharing?: boolean;
+  cardRef?: React.RefObject<HTMLDivElement>;
 }
 
 const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ 
   member, 
   showFullDetails = false, 
-  enableSharing = false 
+  enableSharing = false, 
+  cardRef
 }) => {
   // Use achievements directly from the backend response
   let userAchievements = member.achievements || [];
@@ -29,14 +31,21 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({
   userAchievements = [...userAchievements].sort((a, b) => (b.points || 0) - (a.points || 0));
   const [open, setOpen] = useState(false);
   const levelInfo = getLevelInfo(member.points || 0);
-  const cardRef = useRef<HTMLDivElement>(null);
+  // Use cardRef from props if provided, otherwise create a local one
+  const localRef = useRef<HTMLDivElement>(null);
+  const refToUse = cardRef || localRef;
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md mx-auto" ref={refToUse}>
       <div ref={cardRef}>
         <Card className={`p-6 ${theme.gradient} text-white relative overflow-hidden`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+          {enableSharing && (
+            <div className="absolute top-4 right-4 z-20">
+              <SocialShareButton cardRef={cardRef} memberName={`${member.firstName} ${member.lastName}`} />
+            </div>
+          )}
           
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
@@ -95,13 +104,6 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({
           </div>
         </Card>
       </div>
-      
-      {enableSharing && (
-        <SocialShareButton 
-          cardRef={cardRef} 
-          memberName={`${member.firstName} ${member.lastName}`}
-        />
-      )}
       
       {showFullDetails && (
         <Card className="mt-4 p-6">

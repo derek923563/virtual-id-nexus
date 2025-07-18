@@ -1,11 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Member } from '../../types';
 import VirtualIdCard from '../VirtualIdCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Star, Award, TrendingUp } from 'lucide-react';
 import achievements, { getLevelInfo, calculateUserScore, addPoints } from '../../../shared/achievements.js';
+import { SocialShareButton } from '../SocialShareButton';
 
 interface DashboardHomeProps {
   member: Member;
@@ -14,6 +15,7 @@ interface DashboardHomeProps {
 export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
   const userScore = member ? calculateUserScore(member) : { totalPoints: 0, level: '', title: '', achievements: [] };
   const maxScore = 1000;
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Note: Daily visit bonus should be handled via API, not localStorage
   // This is just for demonstration - in a real app, this would call an API
@@ -31,7 +33,12 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* ID Card - Center */}
         <div className="lg:col-span-2 flex justify-center">
-          <VirtualIdCard member={member} enableSharing={true} />
+          <div className="relative w-full max-w-md">
+            <VirtualIdCard member={member} enableSharing={false} cardRef={cardRef} />
+            <div className="absolute top-4 right-4 z-30">
+              <SocialShareButton cardRef={cardRef} memberName={`${member.firstName} ${member.lastName}`} />
+            </div>
+          </div>
         </div>
 
         {/* Score and Stats */}
