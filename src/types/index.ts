@@ -1,3 +1,4 @@
+import { Achievement } from './achievements';
 
 export interface User {
   id?: string;
@@ -39,6 +40,7 @@ export interface Member {
   points: number;
   emailVerified?: boolean;
   phoneVerified?: boolean;
+  achievements?: Achievement[];
 }
 
 export interface AuthContextType {

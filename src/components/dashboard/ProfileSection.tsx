@@ -162,17 +162,18 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
           otp: emailOtp
         });
         console.log('OTP verify response:', response);
-        if ((response.status === 200 || response.status === 201) && response.data && response.data.success === true) {
-      setEmailVerified(true);
+        const data = response.data || response;
+        if (data && data.success === true) {
+          setEmailVerified(true);
           setEmailOtp('');
           setShowEmailOtpInput(false);
           setEmailOtpSent(false);
           toast({
             title: "Email Verified!",
-            description: `Email verified successfully! +${response.data.pointsAwarded} points earned!`,
+            description: `Email verified successfully! +${data.pointsAwarded} points earned!`,
           });
           if (onMemberUpdate) {
-            onMemberUpdate({ ...member, ...response.data.user });
+            onMemberUpdate({ ...member, ...data.user });
           }
         } else {
           toast({
@@ -207,17 +208,18 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ member, onMember
           otp: phoneOtp
         });
         console.log('OTP verify response:', response);
-        if ((response.status === 200 || response.status === 201) && response.data && response.data.success === true) {
-      setPhoneVerified(true);
+        const data = response.data || response;
+        if (data && data.success === true) {
+          setPhoneVerified(true);
           setPhoneOtp('');
           setShowPhoneOtpInput(false);
           setPhoneOtpSent(false);
           toast({
             title: "Phone Verified!",
-            description: `Phone number verified successfully! +${response.data.pointsAwarded} points earned!`,
+            description: `Phone number verified successfully! +${data.pointsAwarded} points earned!`,
           });
           if (onMemberUpdate) {
-            onMemberUpdate({ ...member, ...response.data.user });
+            onMemberUpdate({ ...member, ...data.user });
           }
         } else {
           toast({

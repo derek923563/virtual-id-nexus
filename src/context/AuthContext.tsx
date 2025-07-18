@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthContextType } from '../types';
 import { api } from '../lib/api';
+import { useTheme } from '../hooks/useTheme';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -16,6 +17,7 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
@@ -70,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user.user.themePreference = themePreference;
         setUser({ ...user });
         localStorage.setItem('currentUser', JSON.stringify(user));
+        setTheme(themePreference); // Sync UI theme with backend
       }
 
       return true;

@@ -184,6 +184,24 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
     }
   };
 
+  // Helper to check if all required fields are filled and valid
+  const allFieldsFilled =
+    formData.firstName.trim() &&
+    formData.lastName.trim() &&
+    formData.username.trim() &&
+    formData.email.trim() &&
+    formData.experience &&
+    formData.dateOfBirth &&
+    formData.address.trim() &&
+    countryCode &&
+    phoneNumber.length === 10 &&
+    password &&
+    confirmPassword &&
+    Object.keys(formErrors).length === 0 &&
+    !passwordError &&
+    !confirmPasswordError &&
+    !emailError;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
       <Card className="w-full max-w-2xl mx-auto">
@@ -285,6 +303,11 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                     setPhoneNumber(val);
+                if (val.length < 10) {
+                  setFormErrors(f => ({ ...f, phoneNumber: 'Phone number must be 10 digits.' }));
+                } else {
+                  setFormErrors(f => { const { phoneNumber, ...rest } = f; return rest; });
+                }
                   }}
                   placeholder="Enter 10-digit phone number"
                   maxLength={10}
@@ -321,25 +344,52 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
                   onChange={(e) => {
                     const value = e.target.value;
                     setFormData({ ...formData, dateOfBirth: value });
-                    
                     // Clear error when user starts typing
                     if (formErrors.dateOfBirth) {
                       setFormErrors(f => { const { dateOfBirth, ...rest } = f; return rest; });
                     }
-                    
-                    // Validate date format when user finishes typing
+                    // Validate date format and validity
                     if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                      const date = new Date(value);
+                      const [year, monthStr, dayStr] = value.split('-');
+                      const yearNum = Number(year);
+                      const monthNum = Number(monthStr);
+                      const dayNum = Number(dayStr);
                       const today = new Date();
-                      const age = differenceInYears(today, date);
-                      
-                      if (isAfter(date, today)) {
-                        setFormErrors(f => ({ ...f, dateOfBirth: 'Date cannot be in the future.' }));
-                      } else if (age < 10) {
-                        setFormErrors(f => ({ ...f, dateOfBirth: 'You must be at least 10 years old.' }));
-                      } else {
-                        setFormErrors(f => { const { dateOfBirth, ...rest } = f; return rest; });
+                      const currentYear = today.getFullYear();
+                      // Month validation
+                      if (monthNum < 1 || monthNum > 12) {
+                        setFormErrors(f => ({ ...f, dateOfBirth: 'Invalid date.' }));
+                        return;
                       }
+                      // Leap year check for 29th Feb (handles '02' as month)
+                      if (monthNum === 2 && dayNum === 29) {
+                        const isLeap = (yearNum % 4 === 0 && (yearNum % 100 !== 0 || yearNum % 400 === 0));
+                        if (!isLeap) {
+                          setFormErrors(f => ({ ...f, dateOfBirth: 'Invalid date.' }));
+                          return;
+                        }
+                      }
+                      // Day validation (dynamic for each month, leap year for Feb)
+                      const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+                      if (dayNum < 1 || dayNum > daysInMonth) {
+                        setFormErrors(f => ({ ...f, dateOfBirth: 'Invalid date.' }));
+                        return;
+                      }
+                      // Year validation (age between 10 and 100)
+                      const age = currentYear - yearNum;
+                      if (age < 10 || age > 100) {
+                        setFormErrors(f => ({ ...f, dateOfBirth: 'Invalid date.' }));
+                        return;
+                      }
+                      // Date must not be in the future
+                      const date = new Date(value);
+                      if (isAfter(date, today)) {
+                        setFormErrors(f => ({ ...f, dateOfBirth: 'Invalid date.' }));
+                        return;
+                      }
+                        setFormErrors(f => { const { dateOfBirth, ...rest } = f; return rest; });
+                    } else if (value) {
+                      setFormErrors(f => ({ ...f, dateOfBirth: 'Invalid date.' }));
                     }
                   }}
                   placeholder="YYYY-MM-DD (e.g., 1990-01-15)"
@@ -371,13 +421,9 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
             />
                 </div>
               </div>
-            {formData.dateOfBirth && (
+            {/* Replace dynamic selected date and tip with static format info */}
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                Selected Date: {formData.dateOfBirth}
-              </p>
-            )}
-              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                💡 You can type the date (YYYY-MM-DD) or click the calendar icon to select from the calendar
+              Format: YYYY-MM-DD (e.g., 1990-01-15)
               </p>
               {formErrors.dateOfBirth && <p className="text-red-500 text-sm">{formErrors.dateOfBirth}</p>}
           </div>
@@ -447,8 +493,8 @@ export const MemberRegistrationForm: React.FC<MemberRegistrationFormProps> = ({ 
           </div>
 
           <div className="flex space-x-2">
-            <Button type="submit" className="flex-1">
-              {member ? 'Update Member' : 'Register Member'}
+            <Button type="submit" className="w-full" disabled={!allFieldsFilled}>
+              {member ? 'Update Member' : 'Register'}
             </Button>
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel

@@ -5,9 +5,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AchievementBadge } from './AchievementBadge';
 import { Calendar, Mail, Phone, MapPin, Briefcase, Trophy } from 'lucide-react';
-import { calculateUserScore } from '../utils/achievementSystem';
-import { achievements } from '../utils/achievementSystem';
 import { getTheme } from '../utils/themeSystem';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { getLevelInfo } from '../../shared/achievements.js';
 
 interface VirtualIdCardProps {
   member: Member;
@@ -15,11 +16,13 @@ interface VirtualIdCardProps {
 }
 
 const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails = false }) => {
-  const userScore = calculateUserScore(member);
+  // Use achievements directly from the backend response
+  let userAchievements = member.achievements || [];
   const theme = getTheme();
-  const userAchievements = achievements.filter(achievement => 
-    userScore.achievements.includes(achievement.id)
-  );
+  // Sort by points descending (toughest/most recent first)
+  userAchievements = [...userAchievements].sort((a, b) => (b.points || 0) - (a.points || 0));
+  const [open, setOpen] = useState(false);
+  const levelInfo = getLevelInfo(member.points || 0);
 
   return (
     <div className="max-w-md mx-auto">
@@ -33,11 +36,7 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails =
               <h3 className="text-lg font-bold">Virtual ID Card</h3>
               <p className="text-blue-200 text-sm">ID: {member.uniqueId}</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className={`${member.status === 'active' ? 'bg-green-500' : 'bg-red-500'} text-white`}>
-                {member.status}
-              </Badge>
-            </div>
+            {/* Status badge removed for user side */}
           </div>
           
           <div className="text-center mb-4">
@@ -45,10 +44,9 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails =
               {member.firstName[0]}{member.lastName[0]}
             </div>
             <h2 className="text-xl font-bold">{member.firstName} {member.lastName}</h2>
-            <p className="text-blue-200">{member.experience} Experience</p>
             <div className="flex items-center justify-center space-x-2 mt-2">
               <Trophy className="h-4 w-4 text-yellow-300" />
-              <span className="text-sm font-semibold">{userScore.title}</span>
+              <span className="text-sm font-semibold">{levelInfo.title}</span>
             </div>
           </div>
 
@@ -58,12 +56,30 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({ member, showFullDetails =
               <h4 className="text-sm font-semibold mb-2 text-center">Achievements</h4>
               <div className="flex flex-wrap gap-1 justify-center">
                 {userAchievements.slice(0, 3).map((achievement) => (
-                  <AchievementBadge key={achievement.id} achievement={achievement} size="sm" />
+                  <AchievementBadge key={achievement._id || achievement.id} achievement={achievement} size="sm" />
                 ))}
                 {userAchievements.length > 3 && (
-                  <Badge variant="secondary" className="text-xs px-2 py-1 bg-white/20 text-white">
-                    +{userAchievements.length - 3} more
-                  </Badge>
+                  <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
+                      <Badge
+                        variant="secondary"
+                        className="text-xs px-2 py-1 bg-white/20 text-white cursor-pointer"
+                        onClick={() => setOpen(true)}
+                      >
+                        +{userAchievements.length - 3} more
+                      </Badge>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>All Achievements</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex flex-wrap gap-2 justify-center mt-2">
+                        {userAchievements.map((achievement) => (
+                          <AchievementBadge key={achievement._id || achievement.id} achievement={achievement} size="md" />
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
             </div>

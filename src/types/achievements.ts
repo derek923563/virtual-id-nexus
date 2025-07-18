@@ -1,10 +1,11 @@
 
 export interface Achievement {
   id: string;
-  name: string;
+  _id?: string;
+  title: string;
   description: string;
   icon: string;
-  condition: (member: any, score: number) => boolean;
+  condition?: (member: any, score: number) => boolean;
   points: number;
 }
 

@@ -22,7 +22,7 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({ achievement,
       title={achievement.description}
     >
       <span>{achievement.icon}</span>
-      <span>{achievement.name}</span>
+      <span>{achievement.title}</span>
     </Badge>
   );
 };

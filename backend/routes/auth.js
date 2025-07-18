@@ -1,6 +1,10 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import Member from '../models/User.js';
+import Achievement from '../models/Achievement.js';
+import achievements from '../../shared/achievements.js';
+import Feedback from '../models/Feedback.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
@@ -68,6 +72,25 @@ router.post('/register', async (req, res) => {
     console.log('Saving user to database...');
     await user.save();
     console.log('User saved successfully:', { id: user._id, username: user.username });
+
+    // Only assign the Welcome achievement on registration
+    let welcomeAchievement;
+    try {
+      const welcomeDef = achievements.find(a => a.title === 'Welcome');
+      welcomeAchievement = await Achievement.create({
+        title: welcomeDef.title,
+        description: welcomeDef.description,
+        icon: welcomeDef.icon,
+        points: welcomeDef.points,
+        member: user._id,
+        dateAwarded: new Date().toISOString(),
+      });
+    } catch (achErr) {
+      console.error('Error creating Welcome achievement:', achErr);
+    }
+    user.achievements = welcomeAchievement ? [welcomeAchievement._id] : [];
+    await user.save();
+    console.log('User updated with achievements:', user.achievements);
 
     res.status(201).json({ message: 'Registration successful', userId: user._id });
   } catch (err) {
@@ -153,46 +176,87 @@ router.post('/send-phone-otp', async (req, res) => {
 router.post('/verify-otp', async (req, res) => {
   try {
     const { userId, type, otp } = req.body;
-    
     console.log('OTP verification request:', { userId, type, otp });
     
-    if (otp === '123456') {
+    if (otp !== '123456') {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    }
+
       const user = await Member.findById(userId);
       if (!user) {
-        console.log('User not found for ID:', userId);
         return res.status(404).json({ success: false, message: 'User not found' });
       }
       
-      // Check if already verified
-      if ((type === 'email' && user.emailVerified) || (type === 'phone' && user.phoneVerified)) {
-        return res.status(400).json({ success: false, message: `${type.charAt(0).toUpperCase() + type.slice(1)} already verified` });
+    let pointsAwarded = 0;
+    if (type === 'email') {
+      if (user.emailVerified) {
+        return res.status(400).json({ success: false, message: 'Email already verified' });
       }
-      
-      // Set verified flag and award points
-      if (type === 'email') user.emailVerified = true;
-      if (type === 'phone') user.phoneVerified = true;
-      user.points += 10;
+      user.emailVerified = true;
+      pointsAwarded = 10;
+      user.points = (user.points || 0) + pointsAwarded;
+    } else if (type === 'phone') {
+      if (user.phoneVerified) {
+        return res.status(400).json({ success: false, message: 'Phone already verified' });
+      }
+      user.phoneVerified = true;
+      pointsAwarded = 10;
+      user.points = (user.points || 0) + pointsAwarded;
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid verification type' });
+    }
+
       await user.save();
       
-      // Transform MongoDB document to include id field
-      const userWithId = {
-        ...user.toObject(),
-        id: user._id.toString()
-      };
-      
-      return res.json({ 
-        success: true,
-        message: `${type} verified successfully`, 
-        pointsAwarded: 10,
-        newTotalPoints: user.points,
-        user: userWithId
+    // Award Profile Master achievement if both verifications are true and not already awarded
+    if (user.emailVerified && user.phoneVerified) {
+      const hasProfileMaster = await Achievement.findOne({
+        member: user._id,
+        title: 'Profile Master',
       });
-    } else {
-      console.log('Invalid OTP provided:', otp);
-      return res.status(400).json({ success: false, message: 'Invalid OTP' });
+      if (!hasProfileMaster) {
+        const profileMasterDef = achievements.find(a => a.title === 'Profile Master');
+        const profileMaster = await Achievement.create({
+          title: profileMasterDef.title,
+          description: profileMasterDef.description,
+          icon: profileMasterDef.icon,
+          points: profileMasterDef.points,
+          member: user._id,
+          dateAwarded: new Date().toISOString(),
+        });
+        user.achievements = user.achievements || [];
+        user.achievements.push(profileMaster._id);
+        await user.save();
+      }
     }
+
+    res.json({
+      success: true,
+      message: `${type.charAt(0).toUpperCase() + type.slice(1)} verified successfully`,
+      user,
+      pointsAwarded
+    });
   } catch (err) {
     console.error('OTP verification error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Update theme preference
+router.put('/theme-preference', async (req, res) => {
+  try {
+    const { userId, themePreference } = req.body;
+    if (!userId || !themePreference) {
+      return res.status(400).json({ message: 'userId and themePreference are required.' });
+    }
+    const user = await Member.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    user.themePreference = themePreference;
+    await user.save();
+    res.json({ success: true, message: 'Theme preference updated.', themePreference });
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -202,7 +266,7 @@ router.put('/change-password', async (req, res) => {
   try {
     const { userId, currentPassword, newPassword } = req.body;
     if (!userId || !currentPassword || !newPassword) {
-      return res.status(400).json({ message: 'All fields are required.' });
+      return res.status(400).json({ message: 'userId, currentPassword, and newPassword are required.' });
     }
     const user = await Member.findById(userId);
     if (!user) {
@@ -212,57 +276,37 @@ router.put('/change-password', async (req, res) => {
     if (!valid) {
       return res.status(400).json({ message: 'Current password is incorrect.' });
     }
-    // Password criteria
-    if (newPassword.length < 8 ||
-        !/[A-Z]/.test(newPassword) ||
-        !/[a-z]/.test(newPassword) ||
-        !/[0-9]/.test(newPassword) ||
-        !/[^A-Za-z0-9]/.test(newPassword)) {
-      return res.status(400).json({ message: 'Password does not meet criteria.' });
-    }
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
-    console.log('Password updated for user:', user.username, 'New hash:', user.password);
-    res.json({ message: 'Password updated successfully.' });
+    res.json({ success: true, message: 'Password updated successfully.' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Update theme preference
-router.put('/theme-preference', async (req, res) => {
+// Submit feedback
+router.post('/feedback', async (req, res) => {
   try {
-    const { userId, themePreference } = req.body;
-    
-    if (!userId || !themePreference) {
-      return res.status(400).json({ message: 'User ID and theme preference are required' });
+    const { firstName, lastName, userId, feedback } = req.body;
+    if (!firstName || !lastName || !userId || !feedback) {
+      return res.status(400).json({ message: 'All fields are required.' });
     }
-    
-    if (!['light', 'dark', 'system'].includes(themePreference)) {
-      return res.status(400).json({ message: 'Invalid theme preference' });
+    if (feedback.length < 20 || feedback.length > 1000) {
+      return res.status(400).json({ message: 'Feedback must be between 20 and 1000 characters.' });
     }
-    
-    const user = await Member.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    user.themePreference = themePreference;
-    await user.save();
-    
-    // Transform MongoDB document to include id field
-    const userWithId = {
-      ...user.toObject(),
-      id: user._id.toString()
-    };
-    
-    res.json({ 
-      message: 'Theme preference updated successfully',
-      user: userWithId
+    const uniqueId = uuidv4();
+    const newFeedback = new Feedback({
+      uniqueId,
+      firstName,
+      lastName,
+      userId,
+      feedback,
+      timestamp: new Date()
     });
+    await newFeedback.save();
+    res.status(201).json({ success: true, message: 'Feedback submitted successfully.' });
   } catch (err) {
-    console.error('Theme preference update error:', err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

@@ -26,6 +26,7 @@ const UserSchema = new mongoose.Schema({
   points: { type: Number, default: 0 },
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
+  achievements: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Achievement' }],
 }, { timestamps: true, collection: 'members' });
 
 // Pre-save hook to hash password if not already hashed

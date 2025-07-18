@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { Settings, Moon, Sun, Lock, Globe, MessageSquare, Eye, EyeOff, Palette } from 'lucide-react';
 import { themes, getTheme, setTheme, isThemeUnlocked } from '../../utils/themeSystem';
-import { calculateUserScore } from '../../utils/achievementSystem';
+import achievements, { getLevelInfo, calculateUserScore, addPoints } from '../../../shared/achievements.js';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
 import { api } from '../../lib/api';
@@ -37,6 +37,7 @@ export const SettingsSection: React.FC = () => {
   });
 
   const [feedback, setFeedback] = useState('');
+  const [feedbackError, setFeedbackError] = useState('');
 
   // Get member data for theme unlock check from backend
   const [member, setMember] = useState(null);
@@ -53,7 +54,8 @@ export const SettingsSection: React.FC = () => {
     };
     fetchMember();
   }, [user]);
-  const userScore = member ? calculateUserScore(member) : { totalPoints: 0 };
+  // Replace userScore calculation with calculateUserScore
+  const userScore = member ? calculateUserScore(member) : { totalPoints: 0, level: '', title: '', achievements: [] };
   const themesUnlocked = isThemeUnlocked(userScore.totalPoints);
 
   const [passwordError, setPasswordError] = useState('');
@@ -171,22 +173,36 @@ export const SettingsSection: React.FC = () => {
     }
   };
 
-  const handleFeedbackSubmit = () => {
-    if (!feedback.trim()) {
+  const handleFeedbackSubmit = async () => {
+    if (!feedback.trim() || feedback.length < 20 || feedback.length > 1000) {
+      setFeedbackError('Feedback must be between 20 and 1000 characters.');
       toast({
         title: "Error",
-        description: "Please enter your feedback",
+        description: "Feedback must be between 20 and 1000 characters.",
         variant: "destructive"
       });
       return;
     }
-    
+    setFeedbackError('');
+    try {
+      await api.post('/auth/feedback', {
+        firstName: user?.user?.firstName || member?.firstName,
+        lastName: user?.user?.lastName || member?.lastName,
+        userId: user?.user?.id || member?.id,
+        feedback: feedback.trim(),
+      });
     toast({
       title: "Feedback Submitted",
       description: "Thank you for your feedback!",
     });
-    
     setFeedback('');
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to submit feedback. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -272,11 +288,6 @@ export const SettingsSection: React.FC = () => {
                   </button>
                 ))}
               </div>
-              {!themesUnlocked && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  Current score: {userScore.totalPoints}/100 points
-                </p>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -290,6 +301,7 @@ export const SettingsSection: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <form onSubmit={e => { e.preventDefault(); handlePasswordChange(); }}>
             <div>
               <Label htmlFor="current-password">Current Password</Label>
               <div className="relative">
@@ -340,7 +352,7 @@ export const SettingsSection: React.FC = () => {
                   )}
                 </Button>
               </div>
-              {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+                {passwordData.newPassword && passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
             </div>
 
             <div>
@@ -370,9 +382,10 @@ export const SettingsSection: React.FC = () => {
               {confirmPasswordError && <p className="text-red-500 text-sm">{confirmPasswordError}</p>}
             </div>
 
-            <Button onClick={handlePasswordChange} className="w-full">
+              <Button type="submit" className="w-full mt-4">
               Update Password
             </Button>
+            </form>
           </CardContent>
         </Card>
 
@@ -394,6 +407,7 @@ export const SettingsSection: React.FC = () => {
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
               />
+              {feedbackError && <p className="text-red-500 text-sm mt-1">{feedbackError}</p>}
             </div>
             <Button onClick={handleFeedbackSubmit}>
               Submit Feedback

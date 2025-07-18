@@ -5,14 +5,14 @@ import VirtualIdCard from '../VirtualIdCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Star, Award, TrendingUp } from 'lucide-react';
-import { calculateUserScore, addPoints } from '../../utils/achievementSystem';
+import achievements, { getLevelInfo, calculateUserScore, addPoints } from '../../../shared/achievements.js';
 
 interface DashboardHomeProps {
   member: Member;
 }
 
 export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
-  const userScore = calculateUserScore(member);
+  const userScore = member ? calculateUserScore(member) : { totalPoints: 0, level: '', title: '', achievements: [] };
   const maxScore = 1000;
 
   // Note: Daily visit bonus should be handled via API, not localStorage
@@ -69,12 +69,6 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Status</span>
-                <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
-                  {member.status}
-                </Badge>
-              </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-300">Experience</span>
                 <span className="font-medium">{member.experience}</span>
