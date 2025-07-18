@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Share2, Facebook, Twitter, Instagram, Download, Linkedin } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface SocialShareButtonProps {
   cardRef: React.RefObject<HTMLDivElement>;
@@ -10,6 +11,8 @@ interface SocialShareButtonProps {
 }
 
 export const SocialShareButton: React.FC<SocialShareButtonProps> = ({ cardRef, memberName }) => {
+  const [open, setOpen] = React.useState(false);
+
   const downloadCardAsImage = async () => {
     if (!cardRef.current) return;
 
@@ -111,68 +114,34 @@ export const SocialShareButton: React.FC<SocialShareButtonProps> = ({ cardRef, m
   };
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center mt-4">
-      <Button 
-        onClick={downloadCardAsImage}
-        variant="outline" 
-        size="sm"
-        className="flex items-center space-x-2"
-      >
-        <Download className="h-4 w-4" />
-        <span>Download</span>
-      </Button>
-      
-      <Button 
-        onClick={() => shareToSocialMedia('facebook')}
-        variant="outline" 
-        size="sm"
-        className="flex items-center space-x-2"
-      >
-        <Facebook className="h-4 w-4" />
-        <span>Facebook</span>
-      </Button>
-      
-      <Button 
-        onClick={() => shareToSocialMedia('twitter')}
-        variant="outline" 
-        size="sm"
-        className="flex items-center space-x-2"
-      >
-        <Twitter className="h-4 w-4" />
-        <span>Twitter</span>
-      </Button>
-      
-      <Button 
-        onClick={() => shareToSocialMedia('linkedin')}
-        variant="outline" 
-        size="sm"
-        className="flex items-center space-x-2"
-      >
-        <Linkedin className="h-4 w-4" />
-        <span>LinkedIn</span>
-      </Button>
-      
-      <Button 
-        onClick={() => shareToSocialMedia('instagram')}
-        variant="outline" 
-        size="sm"
-        className="flex items-center space-x-2"
-      >
-        <Instagram className="h-4 w-4" />
-        <span>Instagram</span>
-      </Button>
-      
-      {navigator.share && (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         <Button 
-          onClick={() => shareToSocialMedia('native')}
-          variant="outline" 
-          size="sm"
-          className="flex items-center space-x-2"
+          variant="ghost"
+          size="icon"
+          className="rounded-full shadow-lg bg-green-600 hover:bg-green-700 text-white border-none focus:ring-2 focus:ring-green-400"
+          aria-label="Share Virtual ID Card"
         >
-          <Share2 className="h-4 w-4" />
-          <span>Share</span>
+          <Share2 className="h-5 w-5" />
         </Button>
-      )}
-    </div>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="flex flex-col gap-2 w-44 p-2 bg-white/90 text-black border-none shadow-xl dark:bg-gray-900/95 dark:text-white">
+        <Button onClick={downloadCardAsImage} variant="ghost" size="sm" className="justify-start w-full rounded-lg text-black dark:text-white hover:bg-green-700/10 dark:hover:bg-green-700/80">
+          <Download className="h-4 w-4 mr-2" /> Download
+        </Button>
+        <Button onClick={() => shareToSocialMedia('facebook')} variant="ghost" size="sm" className="justify-start w-full rounded-lg text-black dark:text-white hover:bg-blue-700/10 dark:hover:bg-blue-700/80">
+          <Facebook className="h-4 w-4 mr-2" /> Facebook
+        </Button>
+        <Button onClick={() => shareToSocialMedia('twitter')} variant="ghost" size="sm" className="justify-start w-full rounded-lg text-black dark:text-white hover:bg-sky-700/10 dark:hover:bg-sky-700/80">
+          <Twitter className="h-4 w-4 mr-2" /> Twitter
+        </Button>
+        <Button onClick={() => shareToSocialMedia('linkedin')} variant="ghost" size="sm" className="justify-start w-full rounded-lg text-black dark:text-white hover:bg-blue-800/10 dark:hover:bg-blue-800/80">
+          <Linkedin className="h-4 w-4 mr-2" /> LinkedIn
+        </Button>
+        <Button onClick={() => shareToSocialMedia('instagram')} variant="ghost" size="sm" className="justify-start w-full rounded-lg text-black dark:text-white hover:bg-pink-700/10 dark:hover:bg-pink-700/80">
+          <Instagram className="h-4 w-4 mr-2" /> Instagram
+        </Button>
+      </PopoverContent>
+    </Popover>
   );
 };
