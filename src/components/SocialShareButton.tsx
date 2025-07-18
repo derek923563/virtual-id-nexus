@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Share2, Facebook, Twitter, Instagram, Download } from 'lucide-react';
+import { Share2, Facebook, Twitter, Instagram, Download, Linkedin } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface SocialShareButtonProps {
@@ -83,6 +83,9 @@ export const SocialShareButton: React.FC<SocialShareButtonProps> = ({ cardRef, m
         case 'twitter':
           window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
           break;
+        case 'linkedin':
+          window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(shareText)}`, '_blank');
+          break;
         case 'instagram':
           // Instagram doesn't support direct URL sharing, so we download the image
           const link = document.createElement('a');
@@ -137,6 +140,16 @@ export const SocialShareButton: React.FC<SocialShareButtonProps> = ({ cardRef, m
       >
         <Twitter className="h-4 w-4" />
         <span>Twitter</span>
+      </Button>
+      
+      <Button 
+        onClick={() => shareToSocialMedia('linkedin')}
+        variant="outline" 
+        size="sm"
+        className="flex items-center space-x-2"
+      >
+        <Linkedin className="h-4 w-4" />
+        <span>LinkedIn</span>
       </Button>
       
       <Button 
