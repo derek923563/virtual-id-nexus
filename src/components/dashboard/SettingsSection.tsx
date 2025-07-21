@@ -13,6 +13,7 @@ import achievements, { getLevelInfo, calculateUserScore, addPoints } from '../..
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
 import { api } from '../../lib/api';
+import ChangePasswordCard from './ChangePasswordCard';
 
 export const SettingsSection: React.FC = () => {
   const { user } = useAuth();
@@ -292,102 +293,8 @@ export const SettingsSection: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Password Change */}
-        <Card className="bg-card text-card-foreground">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Lock className="h-5 w-5" />
-              <span>Change Password</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={e => { e.preventDefault(); handlePasswordChange(); }}>
-            <div>
-              <Label htmlFor="current-password">Current Password</Label>
-              <div className="relative">
-                <Input
-                  id="current-password"
-                  type={showCurrentPassword ? "text" : "password"}
-                  value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                >
-                  {showCurrentPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="new-password">New Password</Label>
-              <div className="relative">
-                <Input
-                  id="new-password"
-                  type={showNewPassword ? "text" : "password"}
-                  value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  )}
-                </Button>
-              </div>
-                {passwordData.newPassword && passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirm-password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  )}
-                </Button>
-              </div>
-              {confirmPasswordError && <p className="text-red-500 text-sm">{confirmPasswordError}</p>}
-            </div>
-
-              <Button type="submit" className="w-full mt-4">
-              Update Password
-            </Button>
-            </form>
-          </CardContent>
-        </Card>
+        {/* Change Password (shared) */}
+        {member && <ChangePasswordCard memberId={member.id} />}
 
         {/* Feedback Form */}
         <Card className="lg:col-span-2 bg-card text-card-foreground">

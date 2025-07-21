@@ -29,6 +29,7 @@ export interface Member {
   address: string;
   joinDate: string;
   status: 'active' | 'inactive';
+  role?: 'admin' | 'user';
   password: string;
   confirmPassword: string;
   themePreference?: 'light' | 'dark' | 'system';

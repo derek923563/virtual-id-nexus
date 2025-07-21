@@ -44,6 +44,13 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Phone number already in use', field: 'phoneNumber' });
     }
 
+    // Remove admin-only fields for admins
+    if (req.body.role === 'admin') {
+      delete req.body.achievements;
+      delete req.body.eventParticipation;
+      delete req.body.points;
+    }
+
     // Create new user
     const user = new Member({
       username,

@@ -58,22 +58,23 @@ router.post('/', async (req, res) => {
   try {
     const memberData = { ...req.body };
     console.log('Received memberData:', memberData);
-    
+    // Remove admin-only fields for admins
+    if (memberData.role === 'admin') {
+      delete memberData.achievements;
+      delete memberData.eventParticipation;
+      delete memberData.points;
+    }
     // Hash password if provided
     if (memberData.password) {
       memberData.password = await bcrypt.hash(memberData.password, 10);
       console.log('Password hashed');
     }
-    
     // Remove confirmPassword from being saved
     delete memberData.confirmPassword;
-    
     const member = new Member(memberData);
     await member.save();
     console.log('Member saved:', member._id);
-
     // Do NOT create any achievements here!
-    
     // Transform MongoDB document to include id field
     const memberWithId = {
       ...member.toObject(),
@@ -91,6 +92,12 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const updateData = { ...req.body };
+    // Remove admin-only fields for admins
+    if (updateData.role === 'admin') {
+      delete updateData.achievements;
+      delete updateData.eventParticipation;
+      delete updateData.points;
+    }
     // Hash password if provided
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
@@ -101,7 +108,6 @@ router.put('/:id', async (req, res) => {
     const originalMember = await Member.findById(req.params.id);
     const member = await Member.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!member) return res.status(404).json({ message: 'Not found' });
-
     // Only award Profile Master if both are verified and at least one was just verified
     const wasEmailVerified = originalMember?.emailVerified;
     const wasPhoneVerified = originalMember?.phoneVerified;
@@ -125,7 +131,6 @@ router.put('/:id', async (req, res) => {
         await member.save();
       }
     }
-    
     // Transform MongoDB document to include id field
     const memberWithId = {
       ...member.toObject(),
