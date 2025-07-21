@@ -536,8 +536,8 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </div>
         );
-      case 'events':
-        return <EventsManagement />;
+        case 'events':
+          return <MultiStepEventForm onSuccess={() => {}} onCancel={() => {}} />;
       case 'admin-logins':
         return (
           <div className="space-y-6">
