@@ -1,31 +1,54 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+const API_BASE = '/.netlify/functions';
 
 function getToken() {
   return localStorage.getItem('token');
 }
 
-async function request(method: string, url: string, data?: any) {
+async function request(method: string, endpoint: string, data?: any) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
+  
   const token = getToken();
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
-  const res = await fetch(`${API_BASE}${url}`, {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
   });
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
     throw new Error(error.message || 'API error');
   }
-  return res.json();
+
+  return response.json();
 }
 
 export const api = {
-  get: (url: string) => request('GET', url),
-  post: (url: string, data?: any) => request('POST', url, data),
-  put: (url: string, data?: any) => request('PUT', url, data),
-  delete: (url: string) => request('DELETE', url),
+  // Auth
+  login: (data: any) => request('POST', '/auth-login', data),
+  register: (data: any) => request('POST', '/auth-register', data),
+  verifyOtp: (data: any) => request('POST', '/verify-otp', data),
+  
+  // Members
+  getMembers: () => request('GET', '/get-members'),
+  getMember: (id: string) => request('GET', `/get-member/${id}`),
+  updateMember: (id: string, data: any) => request('PUT', `/update-member/${id}`, data),
+  deleteMember: (id: string) => request('DELETE', `/delete-member/${id}`),
+  
+  // Public VID
+  getPublicVid: (publicId: string) => request('GET', `/public-vid/${publicId}`),
+  
+  // Theme
+  updateTheme: (data: any) => request('PUT', '/theme-preference', data),
+  
+  // Password
+  changePassword: (data: any) => request('PUT', '/change-password', data),
+  
+  // Feedback
+  submitFeedback: (data: any) => request('POST', '/feedback', data),
 }; 
