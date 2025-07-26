@@ -9,7 +9,7 @@ import { ProfileSection } from './dashboard/ProfileSection';
 import { SettingsSection } from './dashboard/SettingsSection';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Share2 } from 'lucide-react';
 
 interface DashboardContentProps {
   sidebarOpen: boolean;
@@ -20,6 +20,8 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
   const [member, setMember] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -66,6 +68,23 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
       } catch (error) {
         console.error('Failed to reload member data:', error);
       }
+    }
+  };
+
+  const handleShareVid = async () => {
+    if (!member) return;
+    setShareLoading(true);
+    try {
+      const res = await api.post(`/members/${member.id}/public-link`);
+      const publicId = res.publicId;
+      const url = `${window.location.origin}/vid/${publicId}`;
+      setShareUrl(url);
+      await navigator.clipboard.writeText(url);
+      alert(`Public VID link copied to clipboard!\n${url}`);
+    } catch (err) {
+      alert('Failed to generate public link.');
+    } finally {
+      setShareLoading(false);
     }
   };
 
@@ -130,10 +149,12 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ sidebarOpen,
                 <p className="text-gray-600 dark:text-gray-300">Member ID: {member.uniqueId}</p>
               </div>
             </div>
-            <Button onClick={logout} variant="outline" className="flex items-center space-x-2">
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button onClick={logout} variant="outline" className="flex items-center space-x-2">
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>

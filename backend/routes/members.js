@@ -71,6 +71,15 @@ router.post('/', async (req, res) => {
     }
     // Remove confirmPassword from being saved
     delete memberData.confirmPassword;
+    // Generate a unique publicId for every new member
+    let publicId;
+    let isUnique = false;
+    while (!isUnique) {
+      publicId = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      const existing = await Member.findOne({ publicId });
+      if (!existing) isUnique = true;
+    }
+    memberData.publicId = publicId;
     const member = new Member(memberData);
     await member.save();
     console.log('Member saved:', member._id);
@@ -146,6 +155,38 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   await Member.findByIdAndDelete(req.params.id);
   res.json({ message: 'Deleted' });
+});
+
+// Generate or get publicId for a member (authenticated route, but for demo, no auth)
+router.post('/:id/public-link', async (req, res) => {
+  try {
+    const member = await Member.findById(req.params.id);
+    if (!member) return res.status(404).json({ message: 'Not found' });
+    if (!member.publicId) {
+      // Generate a random publicId (could use uuid or nanoid in production)
+      member.publicId = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      await member.save();
+    }
+    res.json({ publicId: member.publicId });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Public endpoint to get VID by publicId
+router.get('/public/vid/:publicId', async (req, res) => {
+  try {
+    const member = await Member.findOne({ publicId: req.params.publicId }).populate('achievements');
+    if (!member) return res.status(404).json({ message: 'Not found' });
+    // Return the full member object, including achievements, for exact match
+    const memberWithId = {
+      ...member.toObject(),
+      id: member._id.toString()
+    };
+    res.json(memberWithId);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 export default router; 

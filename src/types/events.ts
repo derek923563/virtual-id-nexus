@@ -20,36 +20,12 @@ export interface Event {
   category: 'workshop' | 'seminar' | 'hackathon' | 'conference' | 'meetup' | 'other';
   
   // Registration
-  maxRegistrations: number;
   currentRegistrations: number;
   
   // Eligibility
   eligibility: {
-    ageGroup: string;
-    year: string;
-    department: string;
-    other: string;
+    pointsRequired: number;
   };
-  
-  // Media
-  posterUrl?: string;
-  bannerUrl?: string;
-  
-  // Contact
-  organizers: {
-    name: string;
-    phone: string;
-    email: string;
-  }[];
-  
-  // Custom Questions
-  customQuestions: {
-    id: string;
-    question: string;
-    type: 'text' | 'textarea' | 'select' | 'checkbox';
-    options?: string[];
-    required: boolean;
-  }[];
   
   // Fees
   fees: {
@@ -59,8 +35,16 @@ export interface Event {
   };
   
   // Status
-  status: 'draft' | 'published' | 'closed';
-  
+  /**
+   * Only 'draft' or 'published' should be used, but allow string for legacy data.
+   * TODO: Migrate all events in DB to use only 'draft' or 'published'.
+   */
+  status: 'draft' | 'published' | string;
+  isPaid?: boolean;
+
+  // Luma Integration
+  lumaEventLink?: string;
+  lumaEventId: string; // required
   // Timestamps
   createdAt: string;
   updatedAt: string;

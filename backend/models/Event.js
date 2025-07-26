@@ -11,8 +11,8 @@ const EventSchema = new mongoose.Schema({
   registrationDeadline: { type: Date, required: true },
   
   // Venue and Location
-  venue: { type: String, required: true },
-  address: { type: String, required: true },
+  venue: { type: String, required: function() { return this.eventType === 'offline' || this.eventType === 'hybrid'; } },
+  address: { type: String, required: function() { return this.eventType === 'offline' || this.eventType === 'hybrid'; } },
   mapLink: { type: String },
   eventType: { type: String, enum: ['online', 'offline', 'hybrid'], required: true },
   
@@ -24,36 +24,12 @@ const EventSchema = new mongoose.Schema({
   },
   
   // Registration
-  maxRegistrations: { type: Number, required: true },
   currentRegistrations: { type: Number, default: 0 },
   
   // Eligibility
   eligibility: {
-    ageGroup: { type: String },
-    year: { type: String },
-    department: { type: String },
-    other: { type: String }
+    pointsRequired: { type: Number, default: 0 },
   },
-  
-  // Media
-  posterUrl: { type: String },
-  bannerUrl: { type: String },
-  
-  // Contact
-  organizers: [{
-    name: { type: String, required: true },
-    phone: { type: String, required: true },
-    email: { type: String, required: true }
-  }],
-  
-  // Custom Questions
-  customQuestions: [{
-    id: { type: String, required: true },
-    question: { type: String, required: true },
-    type: { type: String, enum: ['text', 'textarea', 'select', 'checkbox'], required: true },
-    options: [{ type: String }],
-    required: { type: Boolean, default: false }
-  }],
   
   // Fees
   fees: {
@@ -63,8 +39,12 @@ const EventSchema = new mongoose.Schema({
   },
   
   // Status
-  status: { type: String, enum: ['draft', 'published', 'closed'], default: 'draft' },
-  
+  status: { type: String, enum: ['draft', 'published'], default: 'draft' },
+  isPaid: { type: Boolean },
+
+  // Luma Integration
+  lumaEventId: { type: String, required: true },
+  lumaEventLink: { type: String },
   // Legacy participants field (keep for backward compatibility)
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Member' }],
 }, { timestamps: true });

@@ -10,6 +10,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from 
 import { useState, useRef } from 'react';
 import { getLevelInfo } from '../../shared/achievements.js';
 import { SocialShareButton } from './SocialShareButton';
+import { useLocation } from 'react-router-dom';
 
 interface VirtualIdCardProps {
   member: Member;
@@ -34,6 +35,24 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({
   // Use cardRef from props if provided, otherwise create a local one
   const localRef = useRef<HTMLDivElement>(null);
   const refToUse = cardRef || localRef;
+  const location = useLocation();
+  // Defensive: ensure publicId is present
+  let publicId = member.publicId;
+  if (!publicId) {
+    if (member.id) {
+      publicId = member.id;
+    } else if (member.username) {
+      publicId = member.username;
+    } else {
+      publicId = 'unknown'; // fallback, should never be empty
+    }
+  }
+  const publicUrl = `${window.location.origin}/vid/${publicId}`;
+  const shareText = `See my VID: ${publicUrl}`;
+  if (!publicId) {
+    console.warn('No publicId found for member, share button will not render.');
+  }
+  console.log('SocialShareButton props:', { publicId, publicUrl, shareText });
 
   return (
     <div className="max-w-md mx-auto" ref={refToUse}>
@@ -41,11 +60,11 @@ const VirtualIdCard: React.FC<VirtualIdCardProps> = ({
         <Card className={`p-6 ${theme.gradient} text-white relative overflow-hidden`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-          {enableSharing && (
-            <div className="absolute top-4 right-4 z-20">
-              <SocialShareButton cardRef={cardRef} memberName={`${member.firstName} ${member.lastName}`} />
-            </div>
-          )}
+          <div className="absolute top-4 right-4 z-20">
+            {publicId && (
+              <SocialShareButton cardRef={cardRef} memberName={`${member.firstName} ${member.lastName}`} shareText={shareText} shareUrl={publicUrl} />
+            )}
+          </div>
           
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">

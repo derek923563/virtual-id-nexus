@@ -24,6 +24,7 @@ const UserSchema = new mongoose.Schema({
     lastActivity: { type: String },
   },
   points: { type: Number, default: 0 },
+  publicId: { type: String, unique: true }, // For public sharing of VID
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
   achievements: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Achievement' }],

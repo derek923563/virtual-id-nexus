@@ -31,6 +31,14 @@ export function DatePicker({ id, onSelect, selected, placeholder = "Pick a date"
     onSelect?.(selectedDate)
   }
 
+  // Compose disabledDate to enforce minDate/maxDate
+  const composedDisabledDate = (date: Date) => {
+    if (minDate && date < minDate) return true;
+    if (maxDate && date > maxDate) return true;
+    if (disabledDate && disabledDate(date)) return true;
+    return false;
+  };
+
   if (variant === 'compact') {
     return (
       <Popover>
@@ -51,7 +59,7 @@ export function DatePicker({ id, onSelect, selected, placeholder = "Pick a date"
             onSelect={handleSelect}
             initialFocus
             className="p-3 pointer-events-auto"
-            disabled={disabledDate}
+            disabled={composedDisabledDate}
           />
         </PopoverContent>
       </Popover>
@@ -80,7 +88,7 @@ export function DatePicker({ id, onSelect, selected, placeholder = "Pick a date"
           onSelect={handleSelect}
           initialFocus
           className="p-3 pointer-events-auto"
-          disabled={disabledDate}
+          disabled={composedDisabledDate}
         />
       </PopoverContent>
     </Popover>

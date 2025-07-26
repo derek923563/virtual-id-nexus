@@ -10,6 +10,8 @@ import LoginForm from './components/LoginForm';
 import Registration from './pages/Registration';
 import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import PUIDPage from './pages/PUID';
 
 const queryClient = new QueryClient();
 
@@ -61,7 +63,12 @@ const App = () => (
             <div className="min-h-screen bg-background text-foreground">
               <Toaster />
               <Sonner />
-              <AppContent />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/vid/:puid" element={<PUIDPage />} />
+                  <Route path="*" element={<AppContent />} />
+                </Routes>
+              </BrowserRouter>
             </div>
           </AuthenticatedThemeWrapper>
         </AuthProvider>

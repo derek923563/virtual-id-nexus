@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Event, EventRegistration } from '../../types/events';
-import { getEventById } from '../../utils/eventUtils';
+import { getEventById, saveEvent } from '../../utils/eventUtils';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,18 +47,19 @@ export const EventRegistrationForm: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      const eventData = getEventById(id);
+      (async () => {
+        const eventData = await getEventById(id);
       setEvent(eventData);
       setLoading(false);
-      
       // Pre-fill user data if available
       if (user) {
         setFormData(prev => ({
           ...prev,
-          email: user.email || '',
-          fullName: user.username || '',
+            email: user.email || user.user?.email || '',
+            fullName: user.username || user.user?.username || '',
         }));
       }
+      })();
     }
   }, [id, user]);
 
@@ -91,9 +92,15 @@ export const EventRegistrationForm: React.FC = () => {
   const canRegister = (): boolean => {
     const now = new Date();
     const registrationDeadline = new Date(event.registrationDeadline);
-    return now <= registrationDeadline && 
-           event.currentRegistrations < event.maxRegistrations &&
-           event.status === 'published';
+    // Points eligibility check
+    if (user && event.eligibility && typeof event.eligibility.pointsRequired === 'number') {
+      const userPoints = user.user?.points ?? 0;
+      if (userPoints < event.eligibility.pointsRequired) {
+        return false;
+      }
+    }
+    // Only allow registration for current or upcoming events
+    return now <= registrationDeadline && (event.status === 'current' || event.status === 'upcoming');
   };
 
   if (!canRegister()) {
@@ -121,15 +128,12 @@ export const EventRegistrationForm: React.FC = () => {
                formData.phone.trim() !== '' &&
                formData.institution.trim() !== '';
       case 1:
-        // Check if all required custom questions are answered
-        const requiredQuestions = event.customQuestions.filter(q => q.required);
-        return requiredQuestions.every(q => {
-          const answer = formData.customAnswers[q.id];
-          return answer && (Array.isArray(answer) ? answer.length > 0 : answer.trim() !== '');
-        });
+        // No custom questions, always valid
+        return true;
       case 2:
+        // Payment confirmation is now optional, but must check 'I have paid' if paid event
         if (event.fees.amount > 0) {
-          return formData.paymentConfirmation.trim() !== '' && formData.agreeToTerms;
+          return formData.agreeToTerms && formData.paymentConfirmation.trim() !== '';
         }
         return formData.agreeToTerms;
       default:
@@ -175,7 +179,7 @@ export const EventRegistrationForm: React.FC = () => {
       const registration: EventRegistration = {
         id: uuidv4(),
         eventId: event.id,
-        userId: user?.username || 'anonymous',
+        userId: user?.id || user?.username || 'anonymous',
         userDetails: {
           fullName: formData.fullName,
           email: formData.email,
@@ -185,26 +189,14 @@ export const EventRegistrationForm: React.FC = () => {
           branch: formData.branch,
           profileImage: formData.profileImage,
         },
-        customAnswers: Object.entries(formData.customAnswers).map(([questionId, answer]) => ({
-          questionId,
-          answer,
-        })),
+        customAnswers: [], // No custom questions
         paymentStatus: event.fees.amount > 0 ? 'pending' : undefined,
         registeredAt: new Date().toISOString(),
       };
 
-      // Save registration to localStorage (replace with API call)
-      const registrations = JSON.parse(localStorage.getItem('eventRegistrations') || '[]');
-      registrations.push(registration);
-      localStorage.setItem('eventRegistrations', JSON.stringify(registrations));
-
-      // Update event's current registrations count
-      const events = JSON.parse(localStorage.getItem('events') || '[]');
-      const eventIndex = events.findIndex((e: Event) => e.id === event.id);
-      if (eventIndex !== -1) {
-        events[eventIndex].currentRegistrations += 1;
-        localStorage.setItem('events', JSON.stringify(events));
-      }
+      // TODO: Replace with API call to register for event
+      await saveEvent({ ...event, currentRegistrations: (event.currentRegistrations || 0) + 1 });
+      // Optionally, call a registration API endpoint here
 
       toast({
         title: "Registration successful!",
@@ -311,92 +303,10 @@ export const EventRegistrationForm: React.FC = () => {
         );
 
       case 1:
-        if (event.customQuestions.length === 0) {
+        // No custom questions
           return (
             <div className="text-center py-8">
               <p className="text-muted-foreground">No additional questions for this event.</p>
-            </div>
-          );
-        }
-
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-4">Additional Information</h3>
-              <p className="text-muted-foreground mb-6">
-                Please answer the following questions to complete your registration.
-              </p>
-            </div>
-            
-            {event.customQuestions.map((question) => (
-              <div key={question.id} className="space-y-2">
-                <Label className="text-sm font-medium">
-                  {question.question}
-                  {question.required && <span className="text-destructive ml-1">*</span>}
-                </Label>
-                
-                {question.type === 'text' && (
-                  <Input
-                    value={(formData.customAnswers[question.id] as string) || ''}
-                    onChange={(e) => handleCustomAnswerChange(question.id, e.target.value)}
-                    placeholder="Enter your answer"
-                  />
-                )}
-                
-                {question.type === 'textarea' && (
-                  <Textarea
-                    value={(formData.customAnswers[question.id] as string) || ''}
-                    onChange={(e) => handleCustomAnswerChange(question.id, e.target.value)}
-                    placeholder="Enter your answer"
-                    rows={4}
-                  />
-                )}
-                
-                {question.type === 'select' && question.options && (
-                  <Select
-                    value={(formData.customAnswers[question.id] as string) || ''}
-                    onValueChange={(value) => handleCustomAnswerChange(question.id, value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {question.options.map((option, index) => (
-                        <SelectItem key={index} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                
-                {question.type === 'checkbox' && question.options && (
-                  <div className="space-y-2">
-                    {question.options.map((option, index) => {
-                      const currentAnswers = (formData.customAnswers[question.id] as string[]) || [];
-                      return (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`${question.id}-${index}`}
-                            checked={currentAnswers.includes(option)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                handleCustomAnswerChange(question.id, [...currentAnswers, option]);
-                              } else {
-                                handleCustomAnswerChange(question.id, currentAnswers.filter(a => a !== option));
-                              }
-                            }}
-                          />
-                          <Label htmlFor={`${question.id}-${index}`} className="text-sm">
-                            {option}
-                          </Label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         );
 
@@ -414,9 +324,7 @@ export const EventRegistrationForm: React.FC = () => {
                     <span>Registration Fee:</span>
                     <span>₹{event.fees.amount}</span>
                   </div>
-                  
                   <Separator />
-                  
                   <div className="space-y-4">
                     {event.fees.paymentLink && (
                       <Button asChild className="w-full">
@@ -426,7 +334,6 @@ export const EventRegistrationForm: React.FC = () => {
                         </a>
                       </Button>
                     )}
-                    
                     {event.fees.upiId && (
                       <div>
                         <Label className="text-sm font-medium">UPI Payment</Label>
@@ -435,16 +342,15 @@ export const EventRegistrationForm: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    
                     <div>
                       <Label htmlFor="paymentConfirmation" className="text-sm font-medium">
-                        Payment Confirmation/Transaction ID *
+                        Payment Confirmation/Transaction ID
                       </Label>
                       <Input
                         id="paymentConfirmation"
                         value={formData.paymentConfirmation}
                         onChange={(e) => setFormData(prev => ({ ...prev, paymentConfirmation: e.target.value }))}
-                        placeholder="Enter transaction ID or confirmation number"
+                        placeholder="Enter transaction ID or confirmation number (optional)"
                         className="mt-1"
                       />
                     </div>
@@ -452,7 +358,6 @@ export const EventRegistrationForm: React.FC = () => {
                 </CardContent>
               </Card>
             )}
-            
             {/* Terms and Conditions */}
             <div className="flex items-start space-x-2">
               <Checkbox
@@ -465,7 +370,6 @@ export const EventRegistrationForm: React.FC = () => {
                 I understand that providing false information may result in cancellation of my registration.
               </Label>
             </div>
-            
             {/* Registration Summary */}
             <Card className="bg-muted/50">
               <CardHeader>

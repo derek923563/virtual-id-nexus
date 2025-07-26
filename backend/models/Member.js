@@ -19,6 +19,7 @@ const MemberSchema = new mongoose.Schema({
     lastActivity: { type: String },
   },
   points: { type: Number, default: 0 },
+  publicId: { type: String, unique: true }, // For public sharing of VID
 }, { timestamps: true });
 
 export default mongoose.model('Member', MemberSchema); 

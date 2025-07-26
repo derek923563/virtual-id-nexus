@@ -25,6 +25,8 @@ import { Settings, Moon, Sun, Lock, Globe, MessageSquare, Palette } from 'lucide
 import { themes, getTheme, setTheme, isThemeUnlocked } from '../utils/themeSystem';
 import achievements, { getLevelInfo, calculateUserScore, addPoints } from '../../shared/achievements.js';
 import ChangePasswordCard from '../components/dashboard/ChangePasswordCard';
+import { MultiStepEventForm } from '../components/admin/MultiStepEventForm';
+import { EventsSection } from '../components/dashboard/EventsSection';
 
 const AdminDashboard: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
@@ -39,6 +41,7 @@ const AdminDashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
   const { logout, user } = useAuth();
   const [adminMember, setAdminMember] = useState<Member | null>(null);
+  const [showEventForm, setShowEventForm] = useState(false);
 
   useEffect(() => {
     loadMembers();
@@ -294,12 +297,12 @@ const AdminDashboard: React.FC = () => {
         toast({
           title: "Error",
           description: err?.response?.data?.message || "Failed to update password.",
-          variant: "destructive"
-        });
-      }
-    };
+        variant: "destructive"
+      });
+    }
+  };
 
-    return (
+  return (
       <div className="space-y-8 max-w-4xl mx-auto bg-background text-foreground">
         <div>
           <h1 className="text-3xl font-bold mb-2">Settings</h1>
@@ -358,26 +361,26 @@ const AdminDashboard: React.FC = () => {
       case 'dashboard':
         return (
           <div className="space-y-6">
-            {loading && (
-              <div className="text-center py-8">
-                <p className="text-lg text-gray-600 dark:text-gray-300">Loading members...</p>
-              </div>
-            )}
-            
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-                <p className="text-red-800">{error}</p>
-                <Button 
-                  onClick={loadMembers} 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2"
-                >
-                  Retry
-                </Button>
-              </div>
-            )}
-            
+        {loading && (
+          <div className="text-center py-8">
+            <p className="text-lg text-gray-600 dark:text-gray-300">Loading members...</p>
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <p className="text-red-800">{error}</p>
+            <Button 
+              onClick={loadMembers} 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+        
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardContent className="p-6">
@@ -536,8 +539,25 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </div>
         );
-        case 'events':
-          return <MultiStepEventForm onSuccess={() => {}} onCancel={() => {}} />;
+      case 'events':
+        if (showEventForm) {
+          return (
+            <MultiStepEventForm
+              onSuccess={() => setShowEventForm(false)}
+              onCancel={() => setShowEventForm(false)}
+            />
+          );
+        }
+        // Admin event dashboard: show EventsSection with Create Event button in the header
+        return (
+          <EventsSection
+            renderHeader={
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowEventForm(true)}>
+                Create Event
+              </Button>
+            }
+          />
+        );
       case 'admin-logins':
         return (
           <div className="space-y-6">
@@ -547,71 +567,71 @@ const AdminDashboard: React.FC = () => {
 
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4 text-gray-400" />
-              <Input
+                  <Input
                 placeholder="Search admins..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-            </div>
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm"
+                  />
+                </div>
 
             <Card>
               <CardHeader>
                 <CardTitle>Admin Users List</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Username</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getFilteredMembersByRole('admin').map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell className="font-medium">
-                          {member.firstName} {member.lastName}
-                        </TableCell>
-                        <TableCell>{member.email}</TableCell>
-                        <TableCell>{member.username}</TableCell>
-                        <TableCell>
-                          <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
-                            {member.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setViewingMember(member)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingMember(member)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(member.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        <TableHead>Username</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                    {getFilteredMembersByRole('admin').map((member) => (
+                        <TableRow key={member.id}>
+                          <TableCell className="font-medium">
+                            {member.firstName} {member.lastName}
+                          </TableCell>
+                        <TableCell>{member.email}</TableCell>
+                          <TableCell>{member.username}</TableCell>
+                          <TableCell>
+                            <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
+                              {member.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                                  <Button 
+                              variant="ghost"
+                              size="icon"
+                                    onClick={() => setViewingMember(member)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                              <Button 
+                              variant="ghost"
+                              size="icon"
+                                onClick={() => setEditingMember(member)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                              variant="ghost"
+                              size="icon"
+                                onClick={() => handleDelete(member.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
               </CardContent>
             </Card>
           </div>
@@ -682,11 +702,11 @@ const AdminDashboard: React.FC = () => {
       {editingMember && (
         <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(undefined)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <MemberRegistrationForm 
-              member={editingMember} 
-              onSuccess={handleEditSuccess} 
-              onCancel={() => setEditingMember(undefined)}
-            />
+          <MemberRegistrationForm
+            member={editingMember}
+            onSuccess={handleEditSuccess}
+            onCancel={() => setEditingMember(undefined)}
+          />
           </DialogContent>
         </Dialog>
       )}
@@ -702,7 +722,7 @@ const AdminDashboard: React.FC = () => {
       {managingPointsFor && (
         <Dialog open={!!managingPointsFor} onOpenChange={() => setManagingPointsFor(undefined)}>
           <DialogContent>
-            <AdminPointsManager 
+            <AdminPointsManager
               member={managingPointsFor}
               onUpdate={(pointsChange) => handlePointsUpdate(managingPointsFor.id, pointsChange)}
             />

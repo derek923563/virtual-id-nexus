@@ -42,6 +42,7 @@ export interface Member {
   emailVerified?: boolean;
   phoneVerified?: boolean;
   achievements?: Achievement[];
+  publicId?: string;
 }
 
 export interface AuthContextType {

@@ -36,7 +36,12 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ member }) => {
           <div className="relative w-full max-w-md">
             <VirtualIdCard member={member} enableSharing={false} cardRef={cardRef} />
             <div className="absolute top-4 right-4 z-30">
-              <SocialShareButton cardRef={cardRef} memberName={`${member.firstName} ${member.lastName}`} />
+              <SocialShareButton 
+                cardRef={cardRef} 
+                memberName={`${member.firstName} ${member.lastName}`}
+                shareText={`Check out my Virtual ID Card!`}
+                shareUrl={`${window.location.origin}/vid/${member.id || member.username || 'unknown'}`}
+              />
             </div>
           </div>
         </div>
